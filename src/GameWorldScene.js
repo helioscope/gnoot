@@ -1,4 +1,7 @@
 import Phaser from 'phaser'
+import characterConfig from './characterConfig';
+import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
+import Level from './Level';
 
 
 export default class GameWorldScene extends Phaser.Scene {
@@ -10,167 +13,206 @@ export default class GameWorldScene extends Phaser.Scene {
 	}
 
   preload() {
+    this.loadMapAssets();
+    this.loadCharacterAssets();
+  }
+
+  loadMapAssets() {
     this.load.image("tiles", "assets/tileset_extruded.png");
     this.load.tilemapTiledJSON("test-map", "assets/test-map.json");
-    this.load.spritesheet('player-sprite', "assets/player-placeholder-anims.png", {frameWidth: 16, frameHeight: 16});
+  }
+
+  loadCharacterAssets() {
+    for (let key in characterConfig) {
+      let charSpriteSheet = characterConfig[key].spriteSheet;
+      this.load.spritesheet(
+        charSpriteSheet.key,
+        charSpriteSheet.path, 
+        {
+          frameWidth: charSpriteSheet.frameSize[0],
+          frameHeight: charSpriteSheet.frameSize[1]
+        }
+      );
+    }
   }
 
   create() {
-    const map = this.make.tilemap({ key: "test-map" });
-    const tileset = map.addTilesetImage("main-tileset", "tiles"); // ([Tiled's name], [the key we used when loading])
+    this.createAnimations();
+    this.enterMap("test-map");
 
-    // Parameters: layer name (or index) from Tiled, tileset, x, y
-    const skyLayer = map.createLayer("Sky", tileset, 0, 0);
-    const backLayer = map.createLayer("Behind", tileset, 0, 0);
-    const groundLayer = map.createLayer("Ground", tileset, 0, 0);
+    const spawnPoint = this.level.map.findObject("Spawns", obj => obj.name === "Start");
 
-    groundLayer.setCollisionByProperty({ solid: true });
+    this.player = new Character(this, spawnPoint.x, spawnPoint.y, characterConfig.player)
 
-    // define our animations
-    this.defineAnimations();
-
-    // Object layers in Tiled let you embed extra info into a map - like a spawn point or custom
-    // collision shapes. In the tmx file, there's an object layer with a point named "Spawn Point"
-    const spawnPoint = map.findObject("Spawns", obj => obj.name === "Start");
-
-    // Create a sprite with physics enabled via the physics system. The image used for the sprite has
-    // a bit of whitespace, so I'm using setSize & setOffset to control the size of the player's body.
-    this.player = this.physics.add
-      .sprite(spawnPoint.x, spawnPoint.y, "player-sprite", "idle_right")
-      .setSize(10, 15)
-      .setOffset(3, 1);
-
-    // Watch the player and worldLayer for collisions, for the duration of the scene:
-    this.physics.add.collider(this.player, groundLayer);
+    this.physics.add.collider(this.player.gameObject, this.level.groundLayer);
 
     const camera = this.cameras.main;
-    // camera.startFollow(this.player);
-    camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    camera.setBounds(0, 0, this.level.map.widthInPixels, this.level.map.heightInPixels);
     camera.zoomX = camera.zoomY = 2;
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
     // Debug graphics
-    this.input.keyboard.once("keydown-D", event => {
-      // Turn on physics debugging to show player's hitbox
-      this.physics.world.createDebugGraphic();
+    // this.input.keyboard.once("keydown-D", event => {
+    //   // Turn on physics debugging to show player's hitbox
+    //   this.physics.world.createDebugGraphic();
 
-      // Create worldLayer collision graphic above the player, but below the help text
-      const graphics = this.add
-        .graphics()
-        .setAlpha(0.75)
-        .setDepth(20);
-      groundLayer.renderDebug(graphics, {
-        tileColor: null, // Color of non-colliding tiles
-        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
-        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
-      });
-    });
+    //   // Create worldLayer collision graphic above the player, but below the help text
+    //   const graphics = this.add
+    //     .graphics()
+    //     .setAlpha(0.75)
+    //     .setDepth(20);
+    //   groundLayer.renderDebug(graphics, {
+    //     tileColor: null, // Color of non-colliding tiles
+    //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
+    //     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
+    //   });
+    // });
   }
-  defineAnimations() {
-    // Create the player's walking animations from the texture atlas. These are stored in the global
-    // animation manager so any sprite can access them.
+
+  createAnimations() {
     const anims = this.anims;
-    anims.create({
-      key: "player_idle_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [0]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_walk_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [1,2]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_jump-rise_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [3,4]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_jump-idle_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [5]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_jump-fall_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [6,7]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_jump-land_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [8]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_climb-idle_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [9]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_climb-up_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [10,11]}),
-      frameRate: 10,
-      repeat: -1
-    });
-    anims.create({
-      key: "player_climb-down_right",
-      frames: this.anims.generateFrameNumbers("player-sprite", {frames: [13,14]}),
-      frameRate: 10,
-      repeat: -1
-    });
+    for (let charKey in characterConfig) {
+      const charConfig = characterConfig[charKey];
+      const charAnims = charConfig.animations;
+      const spritesheetKey = charConfig.spriteSheet.key;
+      const {animationPrefix, defaultFramerate} = charConfig.animationSettings;
+
+      for (let animationKey in charAnims) {
+        const animationInfo = charAnims[animationKey];
+        anims.create({
+          key: animationPrefix + animationKey,
+          frames: this.anims.generateFrameNumbers(spritesheetKey, {frames: animationInfo.frames}),
+          frameRate: animationInfo.frameRate || defaultFramerate,
+          repeat: -1
+        });
+      }
+    }
+  }
+
+  enterMap(mapKey) {
+    this.level = new Level(this, mapKey);
   }
   update(time, delta) {
-    this.handlePlayerMovement();
+    this.handlePlayerMovement(time, delta);
   }
-  handlePlayerMovement() {
-    const groundSpeed = 150;
-    const jumpSpeed = 150;
+  handlePlayerMovement(time, deltaTime) {
     const cursors = this.cursors;
     const player = this.player;
-    const playerBody = player.body;
+    const playerGameObject = player.gameObject;
+    const playerBody = player.gameObject.body;
     const prevVelocity = playerBody.velocity.clone();
-    
-    let jumped = false;
-    let moved = false;
 
-    // Horizontal movement
+    // handle mobility mode update
+
+    player.modeLastFrame = player.mode;
+
+    if (playerBody.onFloor()) {
+      // if we're not climbing, we're grounded
+      if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+        player.setMode(CHARACTER_MODE.GROUNDED, time);
+      }
+    } else {
+      // if we're not climbing, we're airborn
+      if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+        player.setMode(CHARACTER_MODE.AIRBORN, time);
+      }
+    }
+
+    // receive input
+
+    let input = {
+      x : 0,
+      y : 0,
+      jump : false,
+      liftJump : false
+    };
+
     if (cursors.left.isDown) {
-      playerBody.setVelocityX(-groundSpeed);
-      player.flipX = true;
-      moved = true;
-    } else if (cursors.right.isDown) {
-      playerBody.setVelocityX(groundSpeed);
-      player.flipX = false;
-      moved = true;
+      input.x -= 1;
+    }
+    if (cursors.right.isDown) {
+      input.x += 1;
+    }
+    if (cursors.up.isDown) {
+      let pressTime = cursors.up.timeDown;
+
+      // trigger jump
+      if (pressTime > player.lastJumpTime + JUMP_DELAY) { // don't jump too often
+        if (time - pressTime < PREMATURE_JUMP_ALLOWANCE) { // let jump stay active for a bit, (helps with early press)
+          input.jump = true;
+          input.liftJump = true;
+        }
+      }
+
+      // keep holding button to jump higher
+      if (player.mode === CHARACTER_MODE.AIRBORN) {
+        let velocity = player.getVelocity();
+        if (velocity.y < 0) {
+          input.liftJump = true;
+        }
+      }
+    }
+
+    player.inputLastFrame = player.input;
+    player.input = input;
+
+
+    // process input
+
+    if (input.x < 0) {
+      playerBody.setVelocityX(-player.stats.walkSpeed);
+      playerGameObject.flipX = true;
+    } else if (input.x > 0) {
+      playerBody.setVelocityX(player.stats.walkSpeed);
+      playerGameObject.flipX = false;
     } else {
       playerBody.setVelocity(0, prevVelocity.y);
     }
-    if (playerBody.onFloor() && cursors.up.isDown) {
-      playerBody.setVelocityY(-jumpSpeed);
-      jumped = true;
+
+    if (input.jump) {
+      if (player.canJump(time)) {
+        player.jump(time);
+      }
     }
 
-    if (playerBody.onFloor() && !jumped) {
-      if (moved) {
-        player.anims.play("player_walk_right", true);
+    if (input.liftJump && player.mode === CHARACTER_MODE.AIRBORN) {
+      let jumpDuration = time - player.lastJumpTime;
+      let maxLiftTime = player.stats.jumpLiftTime;
+      let jumpFactor = Math.max(0, maxLiftTime - jumpDuration) / maxLiftTime;
+      let potentialLift = player.stats.jumpLift * (deltaTime/1000) * (jumpFactor * jumpFactor);
+      
+      if (player.getVelocity().y < 0) {
+        playerBody.setVelocity(playerBody.velocity.x, playerBody.velocity.y - potentialLift);
+      }
+    }
+
+    // process animation
+
+    if (player.mode === CHARACTER_MODE.GROUNDED) {
+      if (input.x !== 0) {
+        player.setAnimation("walk", true);
       } else {
-        player.anims.play("player_idle_right", true);
+        player.setAnimation("idle", true);
+      }
+    } else if (player.mode === CHARACTER_MODE.AIRBORN) {
+      if (playerBody.velocity.y < -AIRBORN_IDLE_ANIM_MAX_SPEED) {
+        player.setAnimation("jumpRise", true);
+      } else if (playerBody.velocity.y > AIRBORN_IDLE_ANIM_MAX_SPEED) {
+        player.setAnimation("jumpFall", true);
+      } else {
+        player.setAnimation("jumpPeak", true);
+      }
+    } else if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+      if (playerBody.velocity.y < 0) {
+        player.setAnimation("edgeClimbUp", true);
+      } else if (playerBody.velocity.y > 0) {
+        player.setAnimation("edgeClimbDown", true);
+      } else {
+        player.setAnimation("edgeClimbStill", true);
       }
     } else {
-      if (playerBody.velocity.y < -40) {
-        player.anims.play("player_jump-rise_right", true);
-      } else if (playerBody.velocity.y > 40) {
-        player.anims.play("player_jump-fall_right", true);
-      } else {
-        player.anims.play("player_jump-idle_right", true);
-      }
+      console.log(`unhandled player mode: ${player.mode}`);
     }
   }
 }
