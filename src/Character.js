@@ -12,11 +12,18 @@ export const JUMP_DELAY = 150; // (milliseconds) how long you have to wait befor
 export const PREMATURE_JUMP_ALLOWANCE = 100; // (milliseconds) how early you can press the jump button before landing and still have it work
 
 export default class Character {
+  /**
+   * @param {Phaser.Scene}  scene - The scene to add the level to
+   * @param {Number} x - x position to start at
+   * @param {Number} y - y position to start at
+   * @param {any} config - character config (todo: define a type)
+  */
   constructor(scene, x, y, config) {
     let spriteConfig = config.spriteSheet;
     
     this.config = config;
     this.stats = {...config.stats};
+    /** @type Phaser.Types.Physics.Arcade.SpriteWithDynamicBody */
     this.gameObject = scene.physics.add.sprite(x,y, spriteConfig.key)
       .setSize(spriteConfig.colliderSize[0],spriteConfig.colliderSize[1])
       .setOffset(spriteConfig.colliderOffset[0],spriteConfig.colliderOffset[1]);
@@ -69,8 +76,6 @@ export default class Character {
 
   getVelocity() {
     return this.gameObject.body.velocity;
-    // return obj.body.velocity
-      // obj.body.setAccelerationY(obj.body.acceleration.y + delta);
   }
 
   accelerate(deltaX, deltaY) {

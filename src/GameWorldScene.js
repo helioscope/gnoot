@@ -45,6 +45,11 @@ export default class GameWorldScene extends Phaser.Scene {
     this.player = new Character(this, spawnPoint.x, spawnPoint.y, characterConfig.player)
 
     this.physics.add.collider(this.player.gameObject, this.level.groundLayer);
+    
+    // temp -- to help with debugging at runtime in the console
+    // window.level = this.level.groundLayer;
+    // window.physics = this.physics;
+    // window.player = this.player;
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, this.level.map.widthInPixels, this.level.map.heightInPixels);
@@ -53,21 +58,21 @@ export default class GameWorldScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
 
     // Debug graphics
-    // this.input.keyboard.once("keydown-D", event => {
-    //   // Turn on physics debugging to show player's hitbox
-    //   this.physics.world.createDebugGraphic();
+    this.input.keyboard.once("keydown-D", event => {
+      // Turn on physics debugging to show player's hitbox
+      this.physics.world.createDebugGraphic();
 
-    //   // Create worldLayer collision graphic above the player, but below the help text
-    //   const graphics = this.add
-    //     .graphics()
-    //     .setAlpha(0.75)
-    //     .setDepth(20);
-    //   groundLayer.renderDebug(graphics, {
-    //     tileColor: null, // Color of non-colliding tiles
-    //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
-    //     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
-    //   });
-    // });
+      // Create worldLayer collision graphic above the player, but below the help text
+      const graphics = this.add
+        .graphics()
+        .setAlpha(0.75)
+        .setDepth(20);
+      this.level.groundLayer.renderDebug(graphics, {
+        tileColor: null, // Color of non-colliding tiles
+        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
+        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
+      });
+    });
   }
 
   createAnimations() {
@@ -108,16 +113,39 @@ export default class GameWorldScene extends Phaser.Scene {
     player.modeLastFrame = player.mode;
 
     if (playerBody.onFloor()) {
-      // if we're not climbing, we're grounded
+      // if we're not climbing (and on the floor), we're grounded
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         player.setMode(CHARACTER_MODE.GROUNDED, time);
         if (player.modeLastFrame === CHARACTER_MODE.AIRBORN) {
           player.lastLandingTime = time;
         }
       }
-    } else {
-      // if we're not climbing, we're airborn
-      if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+    } else { // not on floor
+      if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+        // check if player has climbed off their ledge / has no more place to grip
+        let hasGrip = false;
+        let playerGripY = playerBody.center.y + player.stats.edgeGripOffsetY;
+        if (player.gameObject.flipX) {
+          let tileAtGripPoint = this.level.groundLayer.getTileAtWorldXY(playerBody.left - 1, playerGripY);
+          if (tileAtGripPoint && tileAtGripPoint.collideRight) {
+            hasGrip = true;
+          }
+        } else {
+          let tileAtGripPoint = this.level.groundLayer.getTileAtWorldXY(playerBody.right + 1, playerGripY);
+          if (tileAtGripPoint && tileAtGripPoint.collideLeft) {
+            hasGrip = true;
+          }
+        }
+
+        if (!hasGrip) {
+          if (playerBody.velocity.y < 0) {
+            player.jump(time);
+          } else {
+            player.setMode(CHARACTER_MODE.AIRBORN);
+          }
+        }
+      } else {
+        // if we're not climbing (and not on the floor), we're airborn
         player.setMode(CHARACTER_MODE.AIRBORN, time);
       }
     }
@@ -130,15 +158,21 @@ export default class GameWorldScene extends Phaser.Scene {
       jump : false,
       liftJump : false
     };
-
+    
     if (cursors.left.isDown) {
       input.x -= 1;
     }
     if (cursors.right.isDown) {
       input.x += 1;
     }
+    if (cursors.down.isDown) {
+      input.y += 1;
+    }
     if (cursors.up.isDown) {
-      let pressTime = cursors.up.timeDown;
+      input.y -= 1;
+    }
+    if (cursors.space.isDown) {
+      let pressTime = cursors.space.timeDown;
 
       // trigger jump
       if (pressTime > player.lastJumpTime + JUMP_DELAY) { // don't jump too often
@@ -164,13 +198,33 @@ export default class GameWorldScene extends Phaser.Scene {
     // process input
 
     if (input.x < 0) {
-      playerBody.setVelocityX(-player.stats.walkSpeed);
-      playerGameObject.flipX = true;
+      if (playerBody.onWall()) {
+        player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+      } else if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+        playerGameObject.flipX = true;
+        playerBody.setVelocityX(-player.stats.walkSpeed);
+      }
     } else if (input.x > 0) {
-      playerBody.setVelocityX(player.stats.walkSpeed);
-      playerGameObject.flipX = false;
+      if (playerBody.onWall()) {
+        player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+      } else if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+        playerGameObject.flipX = false;
+        playerBody.setVelocityX(player.stats.walkSpeed);
+      }
     } else {
       playerBody.setVelocity(0, prevVelocity.y);
+    }
+
+    if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+      if (input.y > 0 && playerBody.onFloor()) {
+        player.setMode(CHARACTER_MODE.GROUNDED);
+        playerBody.setAccelerationY(0);
+      } else {
+        playerBody.setVelocityY(player.stats.climbSpeed * input.y);
+        playerBody.setAccelerationY(-this.physics.config.gravity.y);
+      }
+    } else {
+      playerBody.setAccelerationY(0);
     }
 
     if (input.jump) {
