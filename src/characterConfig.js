@@ -4,7 +4,8 @@ export default {
       walkSpeed : 120,
       jumpSpeed : 110,
       jumpLift : 560,
-      jumpLiftTime : 1000
+      jumpLiftTime : 1000,
+      landingTime : 100
     },
     spriteSheet : {
       key : "player-sprite",

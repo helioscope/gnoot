@@ -36,6 +36,7 @@ export default class Character {
     this.lastExitedMode = CHARACTER_MODE.INIT;
     this.lastModeChangeTime = 0;
     this.lastJumpTime = 0;
+    this.lastLandingTime = 0;
   }
 
   setAnimation(animationKey, shouldContinue) {

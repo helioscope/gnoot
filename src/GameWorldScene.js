@@ -111,6 +111,9 @@ export default class GameWorldScene extends Phaser.Scene {
       // if we're not climbing, we're grounded
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         player.setMode(CHARACTER_MODE.GROUNDED, time);
+        if (player.modeLastFrame === CHARACTER_MODE.AIRBORN) {
+          player.lastLandingTime = time;
+        }
       }
     } else {
       // if we're not climbing, we're airborn
@@ -190,7 +193,9 @@ export default class GameWorldScene extends Phaser.Scene {
     // process animation
 
     if (player.mode === CHARACTER_MODE.GROUNDED) {
-      if (input.x !== 0) {
+      if (time - player.lastLandingTime < player.stats.landingTime) {
+        player.setAnimation("jumpLand", true);
+      } else if (input.x !== 0) {
         player.setAnimation("walk", true);
       } else {
         player.setAnimation("idle", true);
