@@ -9,6 +9,10 @@ export default class GameWorldScene extends Phaser.Scene {
 		super('gameworld-scene');
     this.cursors = null;
     this.player = null;
+    this.level = null;
+    this.worldX = 50;
+    this.worldY = 50;
+    this.levelCollider = null;
     this.showDebug = false;
 	}
 
@@ -19,7 +23,10 @@ export default class GameWorldScene extends Phaser.Scene {
 
   loadMapAssets() {
     this.load.image("tiles", "assets/tileset_extruded.png");
-    this.load.tilemapTiledJSON("test-map", "assets/test-map.json");
+    this.load.tilemapTiledJSON("world-49,50", "assets/world_x49_y50.tmj");
+    this.load.tilemapTiledJSON("world-50,50", "assets/test-map.json");
+    this.load.tilemapTiledJSON("world-51,50", "assets/world_x51_y50.tmj");
+    this.load.tilemapTiledJSON("world-51,49", "assets/world_x51_y49.tmj");
   }
 
   loadCharacterAssets() {
@@ -38,41 +45,46 @@ export default class GameWorldScene extends Phaser.Scene {
 
   create() {
     this.createAnimations();
-    this.enterMap("test-map");
-
-    const spawnPoint = this.level.map.findObject("Spawns", obj => obj.name === "Start");
-
-    this.player = new Character(this, spawnPoint.x, spawnPoint.y, characterConfig.player)
-
-    this.physics.add.collider(this.player.gameObject, this.level.groundLayer);
     
+    this.player = new Character(this, 0, 0, characterConfig.player);
+    this.player.gameObject.depth = 10;
+
     // temp -- to help with debugging at runtime in the console
     // window.level = this.level.groundLayer;
     // window.physics = this.physics;
     // window.player = this.player;
 
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    // Debug graphics
+    // this.input.keyboard.once("keydown-D", event => {
+    //   // Turn on physics debugging to show player's hitbox
+    //   this.physics.world.createDebugGraphic();
+
+    //   // Create worldLayer collision graphic above the player, but below the help text
+    //   const graphics = this.add
+    //     .graphics()
+    //     .setAlpha(0.75)
+    //     .setDepth(20);
+    //   this.level.groundLayer.renderDebug(graphics, {
+    //     tileColor: null, // Color of non-colliding tiles
+    //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
+    //     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
+    //   });
+    // });
+
+    this.enterWorldPosition(this.worldX, this.worldY);
+
     const camera = this.cameras.main;
     camera.setBounds(0, 0, this.level.map.widthInPixels, this.level.map.heightInPixels);
     camera.zoomX = camera.zoomY = 2;
 
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    // Debug graphics
-    this.input.keyboard.once("keydown-D", event => {
-      // Turn on physics debugging to show player's hitbox
-      this.physics.world.createDebugGraphic();
-
-      // Create worldLayer collision graphic above the player, but below the help text
-      const graphics = this.add
-        .graphics()
-        .setAlpha(0.75)
-        .setDepth(20);
-      this.level.groundLayer.renderDebug(graphics, {
-        tileColor: null, // Color of non-colliding tiles
-        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
-        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
-      });
-    });
+    const spawnPoint = this.level.map.findObject("Spawns", obj => obj.name === "Start");
+    if (spawnPoint) {
+      this.player.gameObject.setPosition(spawnPoint.x, spawnPoint.y);
+    } else {
+      console.warn(`no spawn point provided for the starting map (${this.worldX}, ${this.worldY})`);
+    }
   }
 
   createAnimations() {
@@ -95,8 +107,29 @@ export default class GameWorldScene extends Phaser.Scene {
     }
   }
 
-  enterMap(mapKey) {
+  getMapKeyForWorldPosition(x,y) {
+    return `world-${x},${y}`; // todo: pad
+  }
+
+  enterWorldPosition(worldX, worldY, playerX, playerY) {
+    this.worldX = worldX;
+    this.worldY = worldY;
+    console.log(`entering world position: ${worldX}, ${worldY})`);
+    this.enterMap(this.getMapKeyForWorldPosition(worldX, worldY), playerX, playerY);
+  }
+
+  enterMap(mapKey, newPlayerX, newPlayerY) {
+    console.log(`entering map: "${mapKey}" (new player position: ${newPlayerX}, ${newPlayerY})`);
+    if (this.level) {
+      this.level.handleExit();
+      this.levelCollider.destroy();
+    }
     this.level = new Level(this, mapKey);
+    this.level.handleEnter();
+    this.levelCollider = this.physics.add.collider(this.player.gameObject, this.level.groundLayer);
+    if (newPlayerX != null) {
+      this.player.gameObject.setPosition(newPlayerX, newPlayerY);
+    }
   }
   update(time, delta) {
     this.handlePlayerMovement(time, delta);
@@ -107,6 +140,35 @@ export default class GameWorldScene extends Phaser.Scene {
     const playerGameObject = player.gameObject;
     const playerBody = player.gameObject.body;
     const prevVelocity = playerBody.velocity.clone();
+
+    let nextWorldX = this.worldX;
+    let nextWorldY = this.worldY;
+
+    let mapWidth = this.level.map.widthInPixels;
+    let mapHeight = this.level.map.heightInPixels;
+    let playerCenter = playerBody.center;
+    let newPlayerX = playerBody.position.x;
+    let newPlayerY = playerBody.position.y;
+
+    if (playerCenter.x < 0) {
+      nextWorldX -= 1;
+      newPlayerX = playerBody.x + mapWidth;
+    } else if (playerCenter.x > mapWidth) {
+      nextWorldX += 1;
+      newPlayerX = playerBody.x - mapWidth;
+    }
+    if (playerCenter.y < 0) {
+      nextWorldY -= 1;
+      newPlayerY = playerBody.y + mapHeight;
+    } else if (playerCenter.y > this.level.map.heightInPixels) {
+      nextWorldY += 1;
+      newPlayerY = playerBody.y - mapHeight;
+    }
+
+    if (nextWorldX !== this.worldX || nextWorldY !== this.worldY) {
+      this.enterWorldPosition(nextWorldX, nextWorldY, newPlayerX, newPlayerY);
+      return;
+    }
 
     // handle mobility mode update
 

@@ -7,7 +7,8 @@
 		"start": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"fix-tiles": "tile-extruder --tileWidth 16 --tileHeight 16 --extrusion 1 --input raw/tileset.png --output public/assets/tileset_extruded.png"
+		"process-tilesheet": "tile-extruder --tileWidth 16 --tileHeight 16 --extrusion 1 --input raw/tileset.png --output public/assets/tileset_extruded.png",
+		"process-tilemaps" : "node helper-scripts/process-tilemaps public/assets/"
 	},
 	"devDependencies": {
 		"@mapeditor/tiled-api": "^1.9.2",

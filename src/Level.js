@@ -17,14 +17,22 @@ export default class Level {
     const tileset = map.addTilesetImage(TILED_TILESET_NAME, TILESET_ASSET_KEY);
 
     /** @type Phaser.Tilemaps.Tilemap */
-    this.map = map;
+    this.map = map; console.log(this.map);
     /** @type Phaser.Tilemaps.TilemapLayer */
     this.skyLayer = map.createLayer(TILED_LAYER_NAMES.SKY, tileset, 0, 0);
     /** @type Phaser.Tilemaps.TilemapLayer */
     this.backLayer = map.createLayer(TILED_LAYER_NAMES.BACK, tileset, 0, 0);
     /** @type Phaser.Tilemaps.TilemapLayer */
-    this.groundLayer = map.createLayer(TILED_LAYER_NAMES.GROUND, tileset, 0, 0);
+    this.groundLayer = map.createLayer(TILED_LAYER_NAMES.GROUND, tileset, 0, 0); console.log(this.groundLayer);
 
     this.groundLayer.setCollisionByProperty({ solid: true });
+  }
+
+  handleEnter() {
+
+  }
+
+  handleExit() {
+    
   }
 }
