@@ -42,6 +42,14 @@ const action = tiled.registerAction(customActionId, function(action) {
   newMap.height = currentMap.height;
   newMap.tileWidth = currentMap.tileWidth;
   newMap.tileHeight = currentMap.tileHeight;
+  newMap.layerDataFormat = currentMap.layerDataFormat;
+  // are any other properties worth copying for our purposes?
+
+  newMap.setProperties(currentMap.properties());
+
+  currentMap.tilesets.forEach((tileset) => {
+    newMap.addTileset(tileset);
+  });
 
   let newLayers = currentMap.layers.map((originalLayer, index) => {
     let newLayer;
