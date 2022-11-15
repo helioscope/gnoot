@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import characterConfig from './characterConfig';
 import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
 import Level from './Level';
+import { worldMapImports } from './worldMapConfig';
 
 
 export default class GameWorldScene extends Phaser.Scene {
@@ -23,10 +24,9 @@ export default class GameWorldScene extends Phaser.Scene {
 
   loadMapAssets() {
     this.load.image("tiles", "assets/tileset_extruded.png");
-    this.load.tilemapTiledJSON("world-49,50", "assets/world_x49_y50.tmj");
-    this.load.tilemapTiledJSON("world-50,50", "assets/test-map.json");
-    this.load.tilemapTiledJSON("world-51,50", "assets/world_x51_y50.tmj");
-    this.load.tilemapTiledJSON("world-51,49", "assets/world_x51_y49.tmj");
+    for (let key in worldMapImports) {
+      this.load.tilemapTiledJSON(key, "assets/" + worldMapImports[key]);
+    }
   }
 
   loadCharacterAssets() {
@@ -147,25 +147,38 @@ export default class GameWorldScene extends Phaser.Scene {
     let mapWidth = this.level.map.widthInPixels;
     let mapHeight = this.level.map.heightInPixels;
     let playerCenter = playerBody.center;
-    let newPlayerX = playerBody.position.x;
-    let newPlayerY = playerBody.position.y;
+    let newPlayerX = playerGameObject.x;
+    let newPlayerY = playerGameObject.y;
 
     if (playerCenter.x < 0) {
       nextWorldX -= 1;
-      newPlayerX = playerBody.x + mapWidth;
+      newPlayerX = playerGameObject.x + mapWidth;
     } else if (playerCenter.x > mapWidth) {
       nextWorldX += 1;
-      newPlayerX = playerBody.x - mapWidth;
+      newPlayerX = playerGameObject.x - mapWidth;
     }
     if (playerCenter.y < 0) {
       nextWorldY -= 1;
-      newPlayerY = playerBody.y + mapHeight;
+      newPlayerY = playerGameObject.y + mapHeight;
     } else if (playerCenter.y > this.level.map.heightInPixels) {
       nextWorldY += 1;
-      newPlayerY = playerBody.y - mapHeight;
+      newPlayerY = playerGameObject.y - mapHeight;
     }
 
     if (nextWorldX !== this.worldX || nextWorldY !== this.worldY) {
+      if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+        // slight hack to keep player "stuck" to edge after transition
+        if (playerGameObject.flipX) {
+          playerBody.velocity.x = -200;
+        } else {
+          playerBody.velocity.x = 200;
+        }
+        if (nextWorldY < this.worldY) {
+          newPlayerY -= player.stats.edgeGripOffsetY;
+        } else if (nextWorldY > this.worldY) {
+          newPlayerY += 10;
+        }
+      }
       this.enterWorldPosition(nextWorldX, nextWorldY, newPlayerX, newPlayerY);
       return;
     }
