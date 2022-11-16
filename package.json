@@ -7,12 +7,13 @@
 		"start": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"process-tilesheet": "tile-extruder --tileWidth 16 --tileHeight 16 --extrusion 1 --input raw/tileset.png --output public/assets/tileset_extruded.png",
-		"process-tilemaps" : "node helper-scripts/process-tilemaps raw-assets/tiled/ public/assets/"
+		"process-tilesheet": "tile-extruder --tileWidth 16 --tileHeight 16 --extrusion 1 --input raw-assets/tileset.png --output public/assets/tileset_extruded.png",
+		"process-tilemaps": "node helper-scripts/process-tilemaps raw-assets/tiled/ public/assets/"
 	},
 	"devDependencies": {
 		"@mapeditor/tiled-api": "^1.9.2",
 		"eslint": "^8.25.0",
+		"fast-xml-parser": "^4.0.11",
 		"tile-extruder": "^2.1.0",
 		"vite": "^3.1.0"
 	},
