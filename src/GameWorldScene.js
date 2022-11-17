@@ -15,11 +15,18 @@ export default class GameWorldScene extends Phaser.Scene {
     this.worldY = 50;
     this.levelCollider = null;
     this.showDebug = false;
+    this.ambience = {};
 	}
 
   preload() {
+    this.loadAudioAssets();
     this.loadMapAssets();
     this.loadCharacterAssets();
+  }
+
+  loadAudioAssets() {
+    this.load.audio('desert','assets/Desert.wav');
+    this.load.audio('mountain','assets/Ambience_Wind_Mountain_01_Loop.wav');
   }
 
   loadMapAssets() {
@@ -123,6 +130,7 @@ export default class GameWorldScene extends Phaser.Scene {
     if (this.level) {
       this.level.handleExit();
       this.levelCollider.destroy();
+      this.level.map.destroy();
     }
     this.level = new Level(this, mapKey);
     this.level.handleEnter();
@@ -130,10 +138,56 @@ export default class GameWorldScene extends Phaser.Scene {
     if (newPlayerX != null) {
       this.player.gameObject.setPosition(newPlayerX, newPlayerY);
     }
+    
+    let mapProperties = this.level.map.properties;
+    let loopProp = Array.isArray(mapProperties) ? mapProperties.find((prop)=>{return prop.name === "audioloops";}) : null;
+    let loopString = loopProp ? loopProp.value : null;
+    
+    let newAmbience = {};
+    if (loopString) {
+      loopString.split(/[,;]/).forEach((trackString) => {
+        let [key, volume] = trackString.split('@');
+        if (!(key && volume)) {
+          console.warn(`ambience track string is missing parts: ${trackString}`);
+          return;
+        }
+        key = key.trim();
+        volume = parseInt(volume.trim());
+        if (key.length === 0 || isNaN(volume)) {
+          console.warn(`ambience track string seems badly formatted: ${trackString}`);
+          return;
+        } else {
+          newAmbience[key] = volume / 100;
+        }
+      });
+    }
+    this.setAmbience(newAmbience);
   }
+
+  setAmbience(newAmbience) {
+    console.log('new ambience', newAmbience);
+    for (let key in this.ambience) {
+      if (key in newAmbience) {
+        this.ambience[key].volume = newAmbience[key];
+      } else {
+        this.ambience[key].pause();
+      }
+    }
+
+    for (let key in newAmbience) {
+      if (key in this.ambience) {
+        this.ambience[key].resume();
+      } else {
+        this.ambience[key] = this.sound.add(key, {volume: newAmbience[key], loop: true});
+        this.ambience[key].play();
+      }
+    }
+  }
+
   update(time, delta) {
     this.handlePlayerMovement(time, delta);
   }
+
   handlePlayerMovement(time, deltaTime) {
     const cursors = this.cursors;
     const player = this.player;

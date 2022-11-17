@@ -10,6 +10,9 @@ import { XMLBuilder, XMLParser } from 'fast-xml-parser';
  * 
 */
 
+// todo: fix issue with writing boolean properties in XML (`solid="true"` collapses to `solid`)
+// todo: fix issue with tile properties not being handled properly (are the tile ids not getting remapped?)
+
 // todo: consider other OS filepath separators
 // todo: handle multiple tilesets (or better warn about them when encountering them)
 // - could use the image filename to target the appropriate tileset definitions?
@@ -60,7 +63,7 @@ fileNames.forEach((fileName) => {
   }
 });
 
-console.log("backups of the original files have been saved under " +sourceDir + backupFolderName);
+console.log("backups of the original files have been saved under " + sourceDir + backupFolderName);
 
 
 // Functions

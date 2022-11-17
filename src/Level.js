@@ -17,7 +17,7 @@ export default class Level {
     const tileset = map.addTilesetImage(TILED_TILESET_NAME, TILESET_ASSET_KEY);
 
     /** @type Phaser.Tilemaps.Tilemap */
-    this.map = map; console.log(this.map);
+    this.map = map;
     /** @type Phaser.Tilemaps.TilemapLayer */
     this.skyLayer = map.createLayer(TILED_LAYER_NAMES.SKY, tileset, 0, 0);
     /** @type Phaser.Tilemaps.TilemapLayer */
