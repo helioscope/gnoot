@@ -16,6 +16,7 @@ export default class GameWorldScene extends Phaser.Scene {
     this.levelCollider = null;
     this.showDebug = false;
     this.ambience = {};
+    this.sfx = {};
 	}
 
   preload() {
@@ -27,6 +28,13 @@ export default class GameWorldScene extends Phaser.Scene {
   loadAudioAssets() {
     this.load.audio('desert','assets/Desert.wav');
     this.load.audio('mountain','assets/Ambience_Wind_Mountain_01_Loop.wav');
+
+    // lump this into character assets & character config? or separate all audio into its own module or class?
+    this.load.audio('player_jump','assets/knyttlike-jump1.wav');
+    this.load.audio('player_run','assets/knyttlike-running.wav');
+    this.load.audio('player_land','assets/knyttlike-land1.wav');
+    this.load.audio('player_climb','assets/knyttlike-climbing2.wav');
+    this.load.audio('player_grip','assets/knyttlike-grip.wav');
   }
 
   loadMapAssets() {
@@ -55,6 +63,14 @@ export default class GameWorldScene extends Phaser.Scene {
     
     this.player = new Character(this, 0, 0, characterConfig.player);
     this.player.gameObject.depth = 10;
+
+    this.sfx = {
+      'player_jump' : this.sound.add('player_jump', {volume: 0.9}),
+      'player_run' : this.sound.add('player_run', {volume: 0.5, loop: true}),
+      'player_land' : this.sound.add('player_land', {volume: 0.8}),
+      'player_climb' : this.sound.add('player_climb', {volume: 0.4, loop: true}),
+      'player_grip' : this.sound.add('player_grip', {volume: 0.4})
+    };
 
     // temp -- to help with debugging at runtime in the console
     // window.level = this.level.groundLayer;
@@ -115,7 +131,7 @@ export default class GameWorldScene extends Phaser.Scene {
   }
 
   getMapKeyForWorldPosition(x,y) {
-    return `world-${x},${y}`; // todo: pad
+    return `world-${x},${y}`;
   }
 
   enterWorldPosition(worldX, worldY, playerX, playerY) {
@@ -401,6 +417,54 @@ export default class GameWorldScene extends Phaser.Scene {
       }
     } else {
       console.log(`unhandled player mode: ${player.mode}`);
+    }
+
+    // process audio
+
+    if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+      this.setSFXLoop('player_run', false);
+
+      if (playerBody.velocity.y !== 0) {
+        this.setSFXLoop('player_climb', true);
+      } else {
+        this.setSFXLoop('player_climb', false);
+      }
+    } else if (player.mode === CHARACTER_MODE.GROUNDED) {
+      this.setSFXLoop('player_climb', false);
+
+      if (playerBody.velocity.x !== 0) {
+        this.setSFXLoop('player_run', true);
+      } else {
+        this.setSFXLoop('player_run', false);
+      }
+    } else {
+      this.setSFXLoop('player_climb', false);
+      this.setSFXLoop('player_run', false);
+    }
+
+    if (player.lastJumpTime === time) {
+      // console.log('play jump', time);
+      this.sfx['player_jump'].play();
+    }
+    if (player.lastLandingTime === time) {
+      // console.log('play land', time);
+      this.sfx['player_land'].play();
+    }
+
+    if (player.mode === CHARACTER_MODE.EDGE_CLIMBING && player.modeLastFrame !== CHARACTER_MODE.EDGE_CLIMBING) {
+      this.sfx['player_grip'].play();
+    }
+  }
+
+  setSFXLoop(key, shouldPlay) {
+    if (shouldPlay) {
+      if (!this.sfx[key].isPlaying) {
+        this.sfx[key].play();
+      }
+    } else {
+      if (this.sfx[key].isPlaying) {
+        this.sfx[key].stop();
+      }
     }
   }
 }

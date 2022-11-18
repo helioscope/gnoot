@@ -5,6 +5,7 @@ export const worldMapImports = {
   "world-42,48": "world_x42_y48.tmj",
   "world-42,49": "world_x42_y49.tmj",
   "world-42,50": "world_x42_y50.tmj",
+  "world-42,51": "world_x42_y51.tmj",
   "world-43,48": "world_x43_y48.tmj",
   "world-43,49": "world_x43_y49.tmj",
   "world-43,50": "world_x43_y50.tmj",
@@ -22,7 +23,18 @@ export const worldMapImports = {
   "world-50,50": "world_x50_y50.tmj",
   "world-50,51": "world_x50_y51.tmj",
   "world-50,52": "world_x50_y52.tmj",
+  "world-51,47": "world_x51_y47.tmj",
+  "world-51,48": "world_x51_y48.tmj",
   "world-51,49": "world_x51_y49.tmj",
   "world-51,50": "world_x51_y50.tmj",
-  "world-52,50": "world_x52_y50.tmj"
+  "world-51,51": "world_x51_y51.tmj",
+  "world-52,46": "world_x52_y46.tmj",
+  "world-52,47": "world_x52_y47.tmj",
+  "world-52,50": "world_x52_y50.tmj",
+  "world-53,46": "world_x53_y46.tmj",
+  "world-53,47": "world_x53_y47.tmj",
+  "world-54,46": "world_x54_y46.tmj",
+  "world-54,47": "world_x54_y47.tmj",
+  "world-55,47": "world_x55_y47.tmj",
+  "world-55,48": "world_x55_y48.tmj"
 };
