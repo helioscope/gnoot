@@ -11,6 +11,8 @@ export const COYOTE_TIME = 90; // (milliseconds) how late you can jump after wal
 export const JUMP_DELAY = 150; // (milliseconds) how long you have to wait before jumping again
 export const PREMATURE_JUMP_ALLOWANCE = 100; // (milliseconds) how early you can press the jump button before landing and still have it work
 
+export const DEFAULT_MAX_VELOCITY = 400;
+
 export default class Character {
   /**
    * @param {Phaser.Scene}  scene - The scene to add the level to
@@ -27,6 +29,8 @@ export default class Character {
     this.gameObject = scene.physics.add.sprite(x,y, spriteConfig.key)
       .setSize(spriteConfig.colliderSize[0],spriteConfig.colliderSize[1])
       .setOffset(spriteConfig.colliderOffset[0],spriteConfig.colliderOffset[1]);
+
+    this.gameObject.body.maxVelocity.set(this.stats.runSpeed || DEFAULT_MAX_VELOCITY, this.stats.maxFallSpeed || DEFAULT_MAX_VELOCITY);
 
     this.mode = CHARACTER_MODE.INIT;
     this.modeLastFrame = CHARACTER_MODE.INIT;
