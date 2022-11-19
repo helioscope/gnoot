@@ -3,6 +3,7 @@ import characterConfig from './characterConfig';
 import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
 import Level from './Level';
 import { worldMapImports } from './worldMapConfig';
+import saveManager from './saveManager';
 
 
 export default class GameWorldScene extends Phaser.Scene {
@@ -13,10 +14,11 @@ export default class GameWorldScene extends Phaser.Scene {
     this.level = null;
     this.worldX = 50;
     this.worldY = 50;
-    this.levelCollider = null;
     this.showDebug = false;
     this.ambience = {};
     this.sfx = {};
+
+    saveManager.init();
 	}
 
   preload() {
@@ -35,6 +37,8 @@ export default class GameWorldScene extends Phaser.Scene {
     this.load.audio('player_land','assets/knyttlike-land1.wav');
     this.load.audio('player_climb','assets/knyttlike-climbing2.wav');
     this.load.audio('player_grip','assets/knyttlike-grip.wav');
+
+    this.load.audio('rift_close', 'assets/Magic Element 22_2.wav');
   }
 
   loadMapAssets() {
@@ -69,7 +73,8 @@ export default class GameWorldScene extends Phaser.Scene {
       'player_run' : this.sound.add('player_run', {volume: 0.5, loop: true}),
       'player_land' : this.sound.add('player_land', {volume: 0.8}),
       'player_climb' : this.sound.add('player_climb', {volume: 0.4, loop: true}),
-      'player_grip' : this.sound.add('player_grip', {volume: 0.4})
+      'player_grip' : this.sound.add('player_grip', {volume: 0.4}),
+      'rift_close' : this.sound.add('rift_close', {volume: 1})
     };
 
     // temp -- to help with debugging at runtime in the console
@@ -95,6 +100,9 @@ export default class GameWorldScene extends Phaser.Scene {
     //     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
     //   });
     // });
+
+    // temp
+    saveManager.loadSlot(0);
 
     this.enterWorldPosition(this.worldX, this.worldY);
 
@@ -145,39 +153,18 @@ export default class GameWorldScene extends Phaser.Scene {
     console.log(`entering map: "${mapKey}" (new player position: ${newPlayerX}, ${newPlayerY})`);
     if (this.level) {
       this.level.handleExit();
-      this.levelCollider.destroy();
-      this.level.map.destroy();
+      this.level.destroy();
     }
-    this.level = new Level(this, mapKey);
+    
+    this.level = new Level(this, mapKey, this.player);
+    this.level.onCollect = this.onCollectPickup.bind(this);
     this.level.handleEnter();
-    this.levelCollider = this.physics.add.collider(this.player.gameObject, this.level.groundLayer);
+
     if (newPlayerX != null) {
       this.player.gameObject.setPosition(newPlayerX, newPlayerY);
     }
     
-    let mapProperties = this.level.map.properties;
-    let loopProp = Array.isArray(mapProperties) ? mapProperties.find((prop)=>{return prop.name === "audioloops";}) : null;
-    let loopString = loopProp ? loopProp.value : null;
-    
-    let newAmbience = {};
-    if (loopString) {
-      loopString.split(/[,;]/).forEach((trackString) => {
-        let [key, volume] = trackString.split('@');
-        if (!(key && volume)) {
-          console.warn(`ambience track string is missing parts: ${trackString}`);
-          return;
-        }
-        key = key.trim();
-        volume = parseInt(volume.trim());
-        if (key.length === 0 || isNaN(volume)) {
-          console.warn(`ambience track string seems badly formatted: ${trackString}`);
-          return;
-        } else {
-          newAmbience[key] = volume / 100;
-        }
-      });
-    }
-    this.setAmbience(newAmbience);
+    this.setAmbience(this.level.getAmbience());
   }
 
   setAmbience(newAmbience) {
@@ -454,6 +441,10 @@ export default class GameWorldScene extends Phaser.Scene {
     if (player.mode === CHARACTER_MODE.EDGE_CLIMBING && player.modeLastFrame !== CHARACTER_MODE.EDGE_CLIMBING) {
       this.sfx['player_grip'].play();
     }
+  }
+
+  onCollectPickup(pickup, player) {
+    this.sfx['rift_close'].play();
   }
 
   setSFXLoop(key, shouldPlay) {

@@ -49,5 +49,23 @@ export default {
         frames: [12,13]
       }
     }
+  },
+  rift : {
+    spriteSheet : {
+      key : "rift",
+      path : "assets/rift-thing.png",
+      frameSize : [16, 16],
+      colliderSize : [8, 8],
+      colliderOffset : [4, 4]
+    },
+    animationSettings : {
+      animationPrefix : "rift__",
+      defaultFramerate : 10,
+    },
+    animations : {
+      idle : {
+        frames: [0,1,2,3]
+      }
+    }
   }
 };
