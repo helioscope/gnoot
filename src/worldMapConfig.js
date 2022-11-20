@@ -58,5 +58,21 @@ export const worldMapImports = {
   "world-58,49": "world_x58_y49.tmj",
   "world-58,50": "world_x58_y50.tmj",
   "world-59,49": "world_x59_y49.tmj",
-  "world-59,50": "world_x59_y50.tmj"
+  "world-59,50": "world_x59_y50.tmj",
+  "world-60,49": "world_x60_y49.tmj",
+  "world-60,50": "world_x60_y50.tmj"
 };
+export const pickupLocations = [
+  {
+    "id": "rock-bottom",
+    "worldX": 52,
+    "levelX": 232,
+    "levelY": 265
+  },
+  {
+    "id": "test-pickup",
+    "worldX": 50,
+    "levelX": 280,
+    "levelY": 187
+  }
+];
