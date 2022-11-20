@@ -223,24 +223,11 @@ export default class GameWorldScene extends Phaser.Scene {
     }
 
     if (nextWorldX !== this.worldX || nextWorldY !== this.worldY) {
-      if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
-        // slight hack to keep player "stuck" to edge after transition
-        if (playerGameObject.flipX) {
-          playerBody.velocity.x = -200;
-        } else {
-          playerBody.velocity.x = 200;
-        }
-        if (nextWorldY < this.worldY) {
-          newPlayerY -= player.stats.edgeGripOffsetY;
-        } else if (nextWorldY > this.worldY) {
-          newPlayerY += 10;
-        }
-      }
       this.enterWorldPosition(nextWorldX, nextWorldY, newPlayerX, newPlayerY);
       return;
     }
 
-    // handle mobility mode update
+    // handle mobility-mode update (from physics since last update)
 
     player.modeLastFrame = player.mode;
 
@@ -254,22 +241,7 @@ export default class GameWorldScene extends Phaser.Scene {
       }
     } else { // not on floor
       if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
-        // check if player has climbed off their ledge / has no more place to grip
-        let hasGrip = false;
-        let playerGripY = playerBody.center.y + player.stats.edgeGripOffsetY;
-        if (player.gameObject.flipX) {
-          let tileAtGripPoint = this.level.groundLayer.getTileAtWorldXY(playerBody.left - 1, playerGripY);
-          if (tileAtGripPoint && tileAtGripPoint.collideRight) {
-            hasGrip = true;
-          }
-        } else {
-          let tileAtGripPoint = this.level.groundLayer.getTileAtWorldXY(playerBody.right + 1, playerGripY);
-          if (tileAtGripPoint && tileAtGripPoint.collideLeft) {
-            hasGrip = true;
-          }
-        }
-
-        if (!hasGrip) {
+        if (!player.canGrip(this.level.groundLayer)) {
           if (playerBody.velocity.y < 0) {
             player.jump(time);
           } else {
@@ -330,18 +302,20 @@ export default class GameWorldScene extends Phaser.Scene {
     // process input
 
     if (input.x < 0) {
-      if (playerBody.onWall()) {
-        player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
-      } else if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+      if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = true;
         playerBody.setVelocityX(-player.stats.walkSpeed);
+        if (player.canGrip(this.level.groundLayer)) {
+          player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+        }
       }
     } else if (input.x > 0) {
-      if (playerBody.onWall()) {
-        player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
-      } else if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
+      if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = false;
         playerBody.setVelocityX(player.stats.walkSpeed);
+        if (player.canGrip(this.level.groundLayer)) {
+          player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+        }
       }
     } else {
       playerBody.setVelocity(0, prevVelocity.y);

@@ -54,6 +54,29 @@ export default class Character {
     this.gameObject.anims.play(this.config.animationSettings.animationPrefix + animationKey, shouldContinue);
   }
 
+  canGrip(tilemapLayer) {
+    let body = this.gameObject.body;
+    let playerGripTop = body.y + this.stats.edgeGripTop;
+    let playerGripBottom = body.y + this.stats.edgeGripBottom;
+    let upperTile = null;
+    let lowerTile = null;
+
+    if (this.gameObject.flipX) {
+      upperTile = tilemapLayer.getTileAtWorldXY(body.left - 1, playerGripTop);
+      lowerTile = tilemapLayer.getTileAtWorldXY(body.left - 1, playerGripBottom);
+      if ((upperTile && upperTile.collideRight) || (lowerTile && lowerTile.collideRight) ) {
+        return true;
+      }
+    } else {
+      upperTile = tilemapLayer.getTileAtWorldXY(body.right + 1, playerGripTop);
+      lowerTile = tilemapLayer.getTileAtWorldXY(body.right + 1, playerGripBottom);
+      if ((upperTile && upperTile.collideLeft) || (lowerTile && lowerTile.collideLeft) ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   canJump(time) {
     if (this.mode === CHARACTER_MODE.GROUNDED) {
       return true;

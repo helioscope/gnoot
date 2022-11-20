@@ -7,7 +7,8 @@ export default {
       jumpLiftTime : 1000,
       landingTime : 100,
       climbSpeed : 70,
-      edgeGripOffsetY : 3,
+      edgeGripTop : 3,
+      edgeGripBottom : 9,
       maxFallSpeed : 425,
     },
     spriteSheet : {
