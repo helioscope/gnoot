@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import characterConfig from './characterConfig';
 import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
 import Level from './Level';
-import { worldMapImports } from './worldMapConfig';
+import { pickupLocations, worldMapImports } from './worldMapConfig';
 import saveManager from './saveManager';
 
 
@@ -17,6 +17,7 @@ export default class GameWorldScene extends Phaser.Scene {
     this.showDebug = false;
     this.ambience = {};
     this.sfx = {};
+    this.gameOver = false;
 
     saveManager.init();
 	}
@@ -262,41 +263,44 @@ export default class GameWorldScene extends Phaser.Scene {
       jump : false,
       liftJump : false
     };
+
+    if (this.gameOver !== true) {
+      if (cursors.left.isDown) {
+        input.x -= 1;
+      }
+      if (cursors.right.isDown) {
+        input.x += 1;
+      }
+      if (cursors.down.isDown) {
+        input.y += 1;
+      }
+      if (cursors.up.isDown) {
+        input.y -= 1;
+      }
+      if (cursors.space.isDown) {
+        let pressTime = cursors.space.timeDown;
+
+        // trigger jump
+        if (pressTime > player.lastJumpTime + JUMP_DELAY) { // don't jump too often
+          if (time - pressTime < PREMATURE_JUMP_ALLOWANCE) { // let jump stay active for a bit, (helps with early press)
+            input.jump = true;
+            input.liftJump = true;
+          }
+        }
+
+        // keep holding button to jump higher
+        if (player.mode === CHARACTER_MODE.AIRBORN) {
+          let velocity = player.getVelocity();
+          if (velocity.y < 0) {
+            input.liftJump = true;
+          }
+        }
+      }
+
+      player.inputLastFrame = player.input;
+      player.input = input;
+    }
     
-    if (cursors.left.isDown) {
-      input.x -= 1;
-    }
-    if (cursors.right.isDown) {
-      input.x += 1;
-    }
-    if (cursors.down.isDown) {
-      input.y += 1;
-    }
-    if (cursors.up.isDown) {
-      input.y -= 1;
-    }
-    if (cursors.space.isDown) {
-      let pressTime = cursors.space.timeDown;
-
-      // trigger jump
-      if (pressTime > player.lastJumpTime + JUMP_DELAY) { // don't jump too often
-        if (time - pressTime < PREMATURE_JUMP_ALLOWANCE) { // let jump stay active for a bit, (helps with early press)
-          input.jump = true;
-          input.liftJump = true;
-        }
-      }
-
-      // keep holding button to jump higher
-      if (player.mode === CHARACTER_MODE.AIRBORN) {
-        let velocity = player.getVelocity();
-        if (velocity.y < 0) {
-          input.liftJump = true;
-        }
-      }
-    }
-
-    player.inputLastFrame = player.input;
-    player.input = input;
 
 
     // process input
@@ -419,6 +423,21 @@ export default class GameWorldScene extends Phaser.Scene {
 
   onCollectPickup(pickup, player) {
     this.sfx['rift_close'].play();
+    
+    let remainingPickups = pickupLocations.filter((pickupInfo) => !saveManager.didPickUp(pickupInfo.id));
+    console.log(remainingPickups);
+    if (remainingPickups.length === 0) {
+      // later, we will win more elegantly, I hope
+      this.winGame();
+    }
+  }
+
+  winGame() {
+    this.gameOver = true;
+    // todo: make winning look less bad
+    const text1 = this.add.text(0, this.renderer.height / 4, 'You won :)', { font: '32px Arial', color: "white", resolution: 8, align: "center", fixedWidth: (this.renderer.width / 2)});
+    text1.depth = 100;
+    console.log("you won");
   }
 
   setSFXLoop(key, shouldPlay) {

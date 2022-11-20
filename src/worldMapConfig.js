@@ -65,13 +65,15 @@ export const worldMapImports = {
 export const pickupLocations = [
   {
     "id": "rock-bottom",
-    "worldX": 52,
+    "worldX": 47,
+    "worldY": 52,
     "levelX": 232,
     "levelY": 265
   },
   {
     "id": "test-pickup",
     "worldX": 50,
+    "worldY": 50,
     "levelX": 280,
     "levelY": 187
   }

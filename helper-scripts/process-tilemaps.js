@@ -86,7 +86,7 @@ function writeImportFile(filePath) {
 }
 
 
-function gatherExtraConfigData(data, filename, worldX, worldY) {
+function gatherExtraConfigData(data, worldX, worldY) {
   data.layers.forEach((layer) => {
     if (layer["type"] !== "objectgroup") {
       // right now we only care about tile layers
@@ -103,6 +103,7 @@ function gatherExtraConfigData(data, filename, worldX, worldY) {
           levelX : parseInt(objectData.x),
           levelY : parseInt(objectData.y),
         });
+        console.log(pickupLocations);
       }
     });
   });
