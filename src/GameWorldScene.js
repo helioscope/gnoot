@@ -5,6 +5,8 @@ import Level from './Level';
 import { pickupLocations, worldMapImports } from './worldMapConfig';
 import saveManager from './saveManager';
 
+const LEVEL_WIDTH = 480;
+const LEVEL_HEIGHT = 320;
 
 export default class GameWorldScene extends Phaser.Scene {
 	constructor() {
@@ -18,6 +20,9 @@ export default class GameWorldScene extends Phaser.Scene {
     this.ambience = {};
     this.sfx = {};
     this.gameOver = false;
+
+    this.guideLines = [];
+    this.guideLinesActivated = false;
 
     saveManager.init();
 	}
@@ -68,6 +73,8 @@ export default class GameWorldScene extends Phaser.Scene {
     
     this.player = new Character(this, 0, 0, characterConfig.player);
     this.player.gameObject.depth = 10;
+
+    this.createGuideLines();
 
     this.sfx = {
       'player_jump' : this.sound.add('player_jump', {volume: 0.9}),
@@ -300,6 +307,19 @@ export default class GameWorldScene extends Phaser.Scene {
       player.inputLastFrame = player.input;
       player.input = input;
     }
+
+    if (this.guideLinesActivated) {
+      if (cursors.shift.isDown) {
+        this.updateGuideLines();
+      } else {
+        this.guideLinesActivated = false;
+        this.hideGuideLines();
+      }
+    } else {
+      if (cursors.shift.isDown) {
+        this.showGuideLines();
+      }
+    }
     
 
 
@@ -419,6 +439,51 @@ export default class GameWorldScene extends Phaser.Scene {
     if (player.mode === CHARACTER_MODE.EDGE_CLIMBING && player.modeLastFrame !== CHARACTER_MODE.EDGE_CLIMBING) {
       this.sfx['player_grip'].play();
     }
+  }
+
+  createGuideLines() {
+    for (let i = 0; i < 30; i++) {
+      let line = this.add.line(0,0,0,0,5,5,0xffffff);
+      line.depth = 9;
+      line.setOrigin(0);
+      line.setVisible(false);
+      this.guideLines.push(line);
+    }
+  }
+
+  showGuideLines() {
+    this.updateGuideLines();
+    pickupLocations.forEach((locationInfo, index) => {
+      if (saveManager.didPickUp(locationInfo.id) !== true) {
+        this.guideLines[index].setVisible(true);
+      }
+    });
+    this.guideLinesActivated = true;
+  }
+
+  hideGuideLines() {
+    this.guideLines.forEach((line) => line.setVisible(false));
+    this.guideLinesActivated = false;
+  }
+
+  updateGuideLines() {
+    let startX = this.player.gameObject.body.center.x;
+    let startY = this.player.gameObject.body.center.y;
+    let globalOffsetX = this.worldX * LEVEL_WIDTH;
+    let globalOffsetY = this.worldY * LEVEL_HEIGHT;
+
+    pickupLocations.forEach((locationInfo, index) => {
+      let locationX = (locationInfo.worldX * LEVEL_WIDTH) - globalOffsetX + locationInfo.levelX;
+      let locationY = (locationInfo.worldY * LEVEL_HEIGHT) - globalOffsetY + locationInfo.levelY;
+      let length = Math.sqrt((locationX - startX) * (locationX - startX) + (locationY - startY) * (locationY - startY));
+      let line = this.guideLines[index];
+      line.setTo(startX, startY, locationX, locationY);
+      line.setAlpha(Math.min(Math.max(1000/length, 0.05), 0.9));
+
+      if (saveManager.didPickUp(locationInfo.id) === true) {
+        this.guideLines[index].setVisible(false);
+      }
+    })
   }
 
   onCollectPickup(pickup, player) {
