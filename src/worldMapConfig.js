@@ -13,6 +13,7 @@ export const worldMapImports = {
   "world-42,49": "world_x42_y49.tmj",
   "world-42,50": "world_x42_y50.tmj",
   "world-42,51": "world_x42_y51.tmj",
+  "world-42,52": "world_x42_y52.tmj",
   "world-43,48": "world_x43_y48.tmj",
   "world-43,49": "world_x43_y49.tmj",
   "world-43,50": "world_x43_y50.tmj",
@@ -37,30 +38,40 @@ export const worldMapImports = {
   "world-50,50": "world_x50_y50.tmj",
   "world-50,51": "world_x50_y51.tmj",
   "world-50,52": "world_x50_y52.tmj",
-  "world-51,47": "world_x51_y47.tmj",
-  "world-51,48": "world_x51_y48.tmj",
-  "world-51,49": "world_x51_y49.tmj",
   "world-51,50": "world_x51_y50.tmj",
   "world-51,51": "world_x51_y51.tmj",
-  "world-52,46": "world_x52_y46.tmj",
   "world-52,47": "world_x52_y47.tmj",
+  "world-52,48": "world_x52_y48.tmj",
+  "world-52,49": "world_x52_y49.tmj",
   "world-52,50": "world_x52_y50.tmj",
+  "world-52,51": "world_x52_y51.tmj",
   "world-53,46": "world_x53_y46.tmj",
   "world-53,47": "world_x53_y47.tmj",
+  "world-53,50": "world_x53_y50.tmj",
   "world-54,46": "world_x54_y46.tmj",
   "world-54,47": "world_x54_y47.tmj",
+  "world-54,50": "world_x54_y50.tmj",
+  "world-55,46": "world_x55_y46.tmj",
   "world-55,47": "world_x55_y47.tmj",
-  "world-55,48": "world_x55_y48.tmj",
+  "world-55,49": "world_x55_y49.tmj",
+  "world-55,50": "world_x55_y50.tmj",
+  "world-56,47": "world_x56_y47.tmj",
   "world-56,48": "world_x56_y48.tmj",
   "world-56,49": "world_x56_y49.tmj",
+  "world-56,50": "world_x56_y50.tmj",
+  "world-57,48": "world_x57_y48.tmj",
   "world-57,49": "world_x57_y49.tmj",
   "world-57,50": "world_x57_y50.tmj",
   "world-58,49": "world_x58_y49.tmj",
   "world-58,50": "world_x58_y50.tmj",
+  "world-58,51": "world_x58_y51.tmj",
   "world-59,49": "world_x59_y49.tmj",
   "world-59,50": "world_x59_y50.tmj",
   "world-60,49": "world_x60_y49.tmj",
-  "world-60,50": "world_x60_y50.tmj"
+  "world-60,50": "world_x60_y50.tmj",
+  "world-61,49": "world_x61_y49.tmj",
+  "world-61,50": "world_x61_y50.tmj",
+  "world-62,50": "world_x62_y50.tmj"
 };
 export const pickupLocations = [
   {
@@ -76,5 +87,12 @@ export const pickupLocations = [
     "worldY": 50,
     "levelX": 280,
     "levelY": 187
+  },
+  {
+    "id": "yeti-bread",
+    "worldX": 54,
+    "worldY": 47,
+    "levelX": 225,
+    "levelY": 210
   }
 ];
