@@ -324,8 +324,15 @@ export default class GameWorldScene extends Phaser.Scene {
 
 
     // process input
-
+    
     if (input.x < 0) {
+      if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+        // when walking up to a wall, you can latch on without wanting to.
+        // disengage if you try to walk in the opposite direction
+        if (player.isFacingRight() && player.canStand(this.level.groundLayer)) {
+          player.setMode(CHARACTER_MODE.GROUNDED);
+        }
+      }
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = true;
         playerBody.setVelocityX(-player.stats.walkSpeed);
@@ -334,6 +341,13 @@ export default class GameWorldScene extends Phaser.Scene {
         }
       }
     } else if (input.x > 0) {
+      if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
+        // when walking up to a wall, you can latch on without wanting to.
+        // disengage if you try to walk in the opposite direction
+        if (player.isFacingLeft() && player.canStand(this.level.groundLayer)) {
+          player.setMode(CHARACTER_MODE.GROUNDED);
+        }
+      }
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = false;
         playerBody.setVelocityX(player.stats.walkSpeed);

@@ -54,6 +54,14 @@ export default class Character {
     this.gameObject.anims.play(this.config.animationSettings.animationPrefix + animationKey, shouldContinue);
   }
 
+  isFacingLeft() {
+    return this.gameObject.flipX;
+  }
+
+  isFacingRight() {
+    return !this.gameObject.flipX;
+  }
+
   canGrip(tilemapLayer) {
     let body = this.gameObject.body;
     let playerGripTop = body.y + this.stats.edgeGripTop;
@@ -75,6 +83,15 @@ export default class Character {
       }
     }
     return false;
+  }
+
+  /** @param tilemapLayer {Phaser.Tilemaps.TilemapLayer} */
+  canStand(tilemapLayer) {
+    let body = this.gameObject.body;
+    let leftTile = tilemapLayer.getTileAtWorldXY(body.left + 0.5, body.bottom);
+    let rightTile = tilemapLayer.getTileAtWorldXY(body.right - 0.5, body.bottom);
+
+    return ( (leftTile != null && leftTile.collideUp) || (rightTile != null && rightTile.collideUp) );
   }
 
   canJump(time) {
