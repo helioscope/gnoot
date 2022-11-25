@@ -1,10 +1,12 @@
 const defaultState = {
-  started: false,
-  worldX : 0,
+  started : false, // started this save slot
+  worldX : 0, // last world position (when safe)
   worldY : 0,
-  safeX : 0,
+  safeX : 0, // last safe position in level
   safeY : 0,
-  pickups : {}
+  facing : -1, // should be -1 (left) or 1 (right)
+  pickups : {},
+  finished : false, // finished the game using this save slot
 };
 
 let activeSlotNumber = -1;
@@ -13,9 +15,13 @@ let saveSlots = [
   {...defaultState},
   {...defaultState}
 ];
+let didInit = false;
 
 export default {
   init : () => {
+    if (didInit) {
+      return;
+    }
     const savedString = window.localStorage.getItem('saveSlots');
     if (savedString) {
       const parsedSlots = JSON.parse(savedString);
@@ -27,6 +33,7 @@ export default {
     }
     activeSlotNumber = -1;
     activeState = null;
+    didInit = true;
   },
   exitCurrentSlot : () => {
     activeSlotNumber = -1;
@@ -52,9 +59,12 @@ export default {
   getState : () => {
     return activeState ? {...activeState} : null;
   },
-  setSavedPosition : (worldX, worldY, safeX, safeY) => {
+  markActiveSlotAsStarted : () => {
+    activeState = {...activeState, started : true};
+  },
+  setSavedPosition : (worldX, worldY, safeX, safeY, facing) => {
     if (activeState) {
-      activeState = {...activeState, worldX, worldY, safeX, safeY};
+      activeState = {...activeState, worldX, worldY, safeX, safeY, facing};
       saveSlots[activeSlotNumber] = activeState;
       return true;
     } else {
@@ -79,5 +89,8 @@ export default {
       return activeState.pickups[pickupId];
     }
     throw new Error("no slot has been loaded");
+  },
+  markActiveSlotAsFinished : () => {
+    activeState = {...activeState, finished : true};
   }
 }

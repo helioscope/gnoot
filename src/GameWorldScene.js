@@ -1,28 +1,36 @@
-import Phaser from 'phaser'
+import Phaser from 'phaser';
 import characterConfig from './characterConfig';
 import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
 import Level from './Level';
 import { pickupLocations, worldMapImports } from './worldMapConfig';
 import saveManager from './saveManager';
+import LoadSaveScene from './LoadSaveScene';
 
 const LEVEL_WIDTH = 480;
 const LEVEL_HEIGHT = 320;
 
+const WORLD_X_FOR_NEW_GAME = 50;
+const WORLD_Y_FOR_NEW_GAME = 50;
+
 export default class GameWorldScene extends Phaser.Scene {
 	constructor() {
-		super('gameworld-scene');
+		super('GameWorldScene');
     this.cursors = null;
     this.player = null;
     this.level = null;
-    this.worldX = 50;
-    this.worldY = 50;
+    this.worldX = WORLD_X_FOR_NEW_GAME;
+    this.worldY = WORLD_Y_FOR_NEW_GAME;
     this.showDebug = false;
     this.ambience = {};
     this.sfx = {};
     this.gameOver = false;
+    this.running = false;
+    this.paused = false;
 
     this.guideLines = [];
     this.guideLinesActivated = false;
+
+    this.loadSaveScene = null;
 
     saveManager.init();
 	}
@@ -73,6 +81,7 @@ export default class GameWorldScene extends Phaser.Scene {
     
     this.player = new Character(this, 0, 0, characterConfig.player);
     this.player.gameObject.depth = 10;
+    this.player.gameObject.setVisible(false);
 
     this.createGuideLines();
 
@@ -84,11 +93,6 @@ export default class GameWorldScene extends Phaser.Scene {
       'player_grip' : this.sound.add('player_grip', {volume: 0.4}),
       'rift_close' : this.sound.add('rift_close', {volume: 1})
     };
-
-    // temp -- to help with debugging at runtime in the console
-    // window.level = this.level.groundLayer;
-    // window.physics = this.physics;
-    // window.player = this.player;
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -109,21 +113,21 @@ export default class GameWorldScene extends Phaser.Scene {
     //   });
     // });
 
-    // temp
-    saveManager.loadSlot(0);
+    this.camera = this.cameras.main;
+    this.camera.setZoom(2);
 
-    this.enterWorldPosition(this.worldX, this.worldY);
+    // start on load screen (todo: clean this up & move it outside the game scene)
+    // this.loadSaveScene = new LoadSaveScene();
+    // this.loadSaveScene.onTriggerLoad = this.onLoadSaveSlot;
+    // this.loadSaveScene.create();
+    // this.scene.launch(this.loadSaveScene);
 
-    const camera = this.cameras.main;
-    camera.setBounds(0, 0, this.level.map.widthInPixels, this.level.map.heightInPixels);
-    camera.zoomX = camera.zoomY = 2;
-
-    const spawnPoint = this.level.map.findObject("Spawns", obj => obj.name === "Start");
-    if (spawnPoint) {
-      this.player.gameObject.setPosition(spawnPoint.x, spawnPoint.y);
-    } else {
-      console.warn(`no spawn point provided for the starting map (${this.worldX}, ${this.worldY})`);
-    }
+    /** @type LoadSaveScene */
+    this.loadSaveScene = null;
+    /** @ts-ignore */
+    this.loadSaveScene = this.scene.get('LoadSaveScene');
+    this.loadSaveScene.onTriggerLoad = this.onLoadSaveSlot.bind(this);
+    this.scene.switch('LoadSaveScene');
   }
 
   createAnimations() {
@@ -144,6 +148,41 @@ export default class GameWorldScene extends Phaser.Scene {
         });
       }
     }
+  }
+
+  onLoadSaveSlot(slotIndex) {
+    let slotData = saveManager.loadSlot(slotIndex);
+    if (slotData.started) {
+      this.startGameAt(slotData.worldX, slotData.worldY, slotData.safeX, slotData.safeY);
+    } else {
+      this.startGameAt(WORLD_X_FOR_NEW_GAME, WORLD_Y_FOR_NEW_GAME);
+    }
+    this.loadSaveScene.exit();
+    this.loadSaveScene.scene.switch('GameWorldScene');
+    saveManager.markActiveSlotAsStarted();
+    saveManager.saveState();
+    this.player.setFacing(slotData.facing);
+  }
+
+  startGameAt(worldX, worldY, levelX, levelY) {
+    this.enterWorldPosition(worldX, worldY);
+    this.camera.setBounds(0, 0, this.level.map.widthInPixels, this.level.map.heightInPixels);
+
+    if (levelX == null || levelY == null)  {
+      const spawnPoint = this.level.map.findObject("Spawns", obj => obj.name === "Start");
+      if (spawnPoint) {
+        levelX = spawnPoint.x;
+        levelY = spawnPoint.y;
+      } else {
+        console.warn(`no spawn point provided for the starting map (${this.worldX}, ${this.worldY})`);
+        levelX = 0;
+        levelY = 0;
+      }
+    }
+    this.player.gameObject.setPosition(levelX, levelY);
+    this.player.gameObject.setVisible(true);
+    this.running = true;
+    this.paused = false;
   }
 
   getMapKeyForWorldPosition(x,y) {
@@ -196,7 +235,15 @@ export default class GameWorldScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    this.handlePlayerMovement(time, delta);
+    if (this.running && !this.paused) {
+      let playerObj = this.player.gameObject;
+      this.handlePlayerMovement(time, delta);
+
+      if (this.player.mode === CHARACTER_MODE.GROUNDED) {
+        saveManager.setSavedPosition(this.worldX, this.worldY, playerObj.x, playerObj.y, this.player.getFacing());
+        saveManager.saveState();
+      }
+    }
   }
 
   handlePlayerMovement(time, deltaTime) {
@@ -516,6 +563,7 @@ export default class GameWorldScene extends Phaser.Scene {
     // todo: make winning look less bad
     const text1 = this.add.text(0, this.renderer.height / 4, 'You won :)', { font: '32px Arial', color: "white", resolution: 8, align: "center", fixedWidth: (this.renderer.width / 2)});
     text1.depth = 100;
+    saveManager.markActiveSlotAsFinished();
     console.log("you won");
   }
 

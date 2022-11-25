@@ -54,6 +54,23 @@ export default class Character {
     this.gameObject.anims.play(this.config.animationSettings.animationPrefix + animationKey, shouldContinue);
   }
 
+  setFacing(directionNum) {
+    if (directionNum > 0) {
+      this.gameObject.flipX = false;
+    } else if (directionNum < 0) {
+      this.gameObject.flipX = true;
+    }
+  }
+
+  getFacing() {
+    // note: default sprite orientation is right-facing
+    if (this.gameObject.flipX) {
+       return -1;
+    } else {
+      return 1;
+    }
+  }
+
   isFacingLeft() {
     return this.gameObject.flipX;
   }
