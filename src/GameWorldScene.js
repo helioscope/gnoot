@@ -12,6 +12,12 @@ const LEVEL_HEIGHT = 320;
 const WORLD_X_FOR_NEW_GAME = 50;
 const WORLD_Y_FOR_NEW_GAME = 50;
 
+const PLAYER_DEPTH = 10;
+const GUIDELINE_DEPTH = 9;
+
+const CAMERA_FADE_DEPTH = 100;
+const FLASH_DEPTH = 99;
+
 export default class GameWorldScene extends Phaser.Scene {
 	constructor() {
 		super('GameWorldScene');
@@ -26,6 +32,10 @@ export default class GameWorldScene extends Phaser.Scene {
     this.gameOver = false;
     this.running = false;
     this.paused = false;
+    /** @type Phaser.GameObjects.Rectangle */
+    this.screenFlash = null;
+    /** @type Phaser.GameObjects.Rectangle */
+    this.cameraFade = null;
 
     this.guideLines = [];
     this.guideLinesActivated = false;
@@ -80,10 +90,16 @@ export default class GameWorldScene extends Phaser.Scene {
     this.createAnimations();
     
     this.player = new Character(this, 0, 0, characterConfig.player);
-    this.player.gameObject.depth = 10;
+    this.player.gameObject.depth = PLAYER_DEPTH;
     this.player.gameObject.setVisible(false);
 
     this.createGuideLines();
+
+    this.screenFlash = this.add.rectangle(0,0, LEVEL_WIDTH,LEVEL_HEIGHT, 0xFFFFFF);
+    this.screenFlash.setDepth(FLASH_DEPTH).setOrigin(0,0).setVisible(false);
+
+    this.cameraFade = this.add.rectangle(0,0, LEVEL_WIDTH,LEVEL_HEIGHT, 0x000000);
+    this.cameraFade.setDepth(CAMERA_FADE_DEPTH).setOrigin(0,0).setVisible(false);
 
     this.sfx = {
       'player_jump' : this.sound.add('player_jump', {volume: 0.9}),
@@ -183,6 +199,71 @@ export default class GameWorldScene extends Phaser.Scene {
     this.player.gameObject.setVisible(true);
     this.running = true;
     this.paused = false;
+    this.fadeIn();
+  }
+
+  flashScreen(colorNumber = 0xFFFFFF) {
+    this.screenFlash.fillColor = colorNumber;
+    this.screenFlash.fillAlpha = 0;
+    this.screenFlash.setVisible(true);
+    this.tweens.timeline({
+      tweens: [
+        {
+          targets: this.screenFlash,
+          fillAlpha: {
+            value: 0.65,
+            duration: 35,
+            ease: 'Power1'
+          }
+        },
+        {
+          targets: this.screenFlash,
+          fillAlpha: {
+            value: 0.22,
+            duration: 200,
+            ease: 'Power1'
+          }
+        },
+        {
+          targets: this.screenFlash,
+          fillAlpha: {
+            value: 0,
+            duration: 300,
+            ease: 'Ease-Out',
+            onComplete: () => {
+              this.screenFlash.setVisible(false);
+            }
+          }
+        },
+      ]
+    });
+  }
+
+  fadeIn(colorNumber = 0x000000, duration = 2000, onComplete=()=>{}) {
+    this.cameraFade.setVisible(true);
+    this.cameraFade.fillColor = colorNumber;
+    this.cameraFade.fillAlpha = 1;
+    this.tweens.add({
+      targets: this.cameraFade,
+      delay : 20,
+      fillAlpha : { value: 0, duration: duration, ease: 'Ease-Out' },
+      onComplete : () => {
+        this.cameraFade.setVisible(false);
+        onComplete();
+      }
+    });
+  }
+
+  fadeOut(colorNumber = 0x000000, duration = 4000, onComplete=()=>{}) {
+    this.cameraFade.setVisible(true);
+    this.cameraFade.fillColor = colorNumber;
+    this.cameraFade.fillAlpha = 0;
+    this.tweens.add({
+      delay: 50,
+      targets: this.cameraFade,
+      fillAlpha : { value: 1, duration: duration, ease: 'Ease-Out' },
+      onComplete
+    });
   }
 
   getMapKeyForWorldPosition(x,y) {
@@ -534,7 +615,7 @@ export default class GameWorldScene extends Phaser.Scene {
   createGuideLines() {
     for (let i = 0; i < 30; i++) {
       let line = this.add.line(0,0,0,0,5,5,0xffffff);
-      line.depth = 9;
+      line.depth = GUIDELINE_DEPTH;
       line.setOrigin(0);
       line.setVisible(false);
       this.guideLines.push(line);
@@ -578,6 +659,7 @@ export default class GameWorldScene extends Phaser.Scene {
 
   onCollectPickup(pickup, player) {
     this.sfx['rift_close'].play();
+    this.flashScreen();
     
     let remainingPickups = pickupLocations.filter((pickupInfo) => !saveManager.didPickUp(pickupInfo.id));
     console.log(remainingPickups);
@@ -591,9 +673,10 @@ export default class GameWorldScene extends Phaser.Scene {
     this.gameOver = true;
     // todo: make winning look less bad
     const text1 = this.add.text(0, this.renderer.height / 4, 'You won :)', { font: '32px Arial', color: "white", resolution: 8, align: "center", fixedWidth: (this.renderer.width / 2)});
-    text1.depth = 100;
+    text1.depth = CAMERA_FADE_DEPTH + 1;
     saveManager.markActiveSlotAsFinished();
     console.log("you won");
+    this.fadeOut();
   }
 
   setSFXLoop(key, shouldPlay) {
