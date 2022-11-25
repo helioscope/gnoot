@@ -189,6 +189,10 @@ export default class GameWorldScene extends Phaser.Scene {
     return `world-${x},${y}`;
   }
 
+  worldTileExists(worldX, worldY) {
+    return this.load.cacheManager.tilemap.exists(this.getMapKeyForWorldPosition(worldX, worldY));
+  }
+
   enterWorldPosition(worldX, worldY, playerX, playerY) {
     this.worldX = worldX;
     this.worldY = worldY;
@@ -278,8 +282,33 @@ export default class GameWorldScene extends Phaser.Scene {
     }
 
     if (nextWorldX !== this.worldX || nextWorldY !== this.worldY) {
-      this.enterWorldPosition(nextWorldX, nextWorldY, newPlayerX, newPlayerY);
-      return;
+      if (this.worldTileExists(nextWorldX, nextWorldY)) {
+        this.enterWorldPosition(nextWorldX, nextWorldY, newPlayerX, newPlayerY);
+        return;
+      } else {
+        // stop player from going to nonexistent world locations.
+        // this shouldn't be possible, but just in case someone manages this, it's better to not crash.
+        // -- the effect here looks kinda buggy, which might help people to report it (if it every happens).
+        if (nextWorldX < this.worldX) {
+          playerGameObject.x = 0;
+          playerBody.velocity.x = 0;
+          playerBody.acceleration.x = 0;
+        } else if (nextWorldX > this.worldX) {
+          playerGameObject.x = mapWidth;
+          playerBody.velocity.x = 0;
+          playerBody.acceleration.x = 0;
+        }
+
+        if (nextWorldY < this.worldY) {
+          playerGameObject.y = 0;
+          playerBody.velocity.y = 0;
+          playerBody.acceleration.y = 0;
+        } else if (nextWorldY > this.worldY) {
+          playerGameObject.y = mapHeight;
+          playerBody.velocity.y = 0;
+          playerBody.acceleration.y = 0;
+        }
+      }
     }
 
     // handle mobility-mode update (from physics since last update)

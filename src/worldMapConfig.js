@@ -107,6 +107,7 @@ export const worldMapImports = {
   "world-60,50": "world_x60_y50.tmj",
   "world-61,49": "world_x61_y49.tmj",
   "world-61,50": "world_x61_y50.tmj",
+  "world-61,52": "world_x61_y52.tmj",
   "world-62,50": "world_x62_y50.tmj"
 };
 export const pickupLocations = [
@@ -139,10 +140,24 @@ export const pickupLocations = [
     "levelY": 187
   },
   {
-    "id": "yeti",
+    "id": "chilly",
     "worldX": 54,
     "worldY": 47,
     "levelX": 248,
     "levelY": 232
+  },
+  {
+    "id": "mushy",
+    "worldX": 54,
+    "worldY": 51,
+    "levelX": 414,
+    "levelY": 255
+  },
+  {
+    "id": "precarious",
+    "worldX": 61,
+    "worldY": 49,
+    "levelX": 245,
+    "levelY": 177
   }
 ];
