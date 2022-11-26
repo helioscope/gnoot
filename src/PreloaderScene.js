@@ -28,11 +28,12 @@ export default class PreloaderScene extends Phaser.Scene {
   updateLoadProgressVisuals(progressValue) {
     this.progressGraphics.clear();
     this.progressGraphics.fillStyle(0xffffff, 1);
-    this.progressGraphics.fillRect(0, 270, 800 * progressValue, 60);
+    this.progressGraphics.fillRect(0, 270,  this.game.canvas.width * progressValue, 60);
+    console.log(this.game.canvas.width * progressValue);
   }
 
   endLoadProgressVisuals() {
-    this.progressGraphics.destroy();
+    console.log('load finished');
     this.loadFinished = true;
   }
 
@@ -77,6 +78,7 @@ export default class PreloaderScene extends Phaser.Scene {
 
   update() {
     if (this.loadFinished && !this.allDone) {
+      this.progressGraphics.destroy();
       this.onComplete();
       this.scene.switch('GameWorldScene');
       this.allDone = true;
