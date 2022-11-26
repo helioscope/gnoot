@@ -70,7 +70,8 @@ export default class GameWorldScene extends Phaser.Scene {
       'player_land' : this.sound.add('player_land', {volume: 0.8}),
       'player_climb' : this.sound.add('player_climb', {volume: 0.4, loop: true}),
       'player_grip' : this.sound.add('player_grip', {volume: 0.4}),
-      'rift_close' : this.sound.add('rift_close', {volume: 1})
+      'rift_close' : this.sound.add('rift_close', {volume: 1}),
+      'guiding_line' : this.sound.add('guiding_line', {volume: 0.07, loop: true}),
     };
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -562,11 +563,9 @@ export default class GameWorldScene extends Phaser.Scene {
     }
 
     if (player.lastJumpTime === time) {
-      // console.log('play jump', time);
       this.sfx['player_jump'].play();
     }
     if (player.lastLandingTime === time) {
-      // console.log('play land', time);
       this.sfx['player_land'].play();
     }
 
@@ -593,11 +592,13 @@ export default class GameWorldScene extends Phaser.Scene {
       }
     });
     this.guideLinesActivated = true;
+    this.setSFXLoop('guiding_line', true);
   }
 
   hideGuideLines() {
     this.guideLines.forEach((line) => line.setVisible(false));
     this.guideLinesActivated = false;
+    this.setSFXLoop('guiding_line', false);
   }
 
   updateGuideLines() {

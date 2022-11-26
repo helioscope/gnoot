@@ -68,6 +68,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.audio('player_land','assets/knyttlike-land1.wav');
     this.load.audio('player_climb','assets/knyttlike-climbing2.wav');
     this.load.audio('player_grip','assets/knyttlike-grip.wav');
+    this.load.audio('guiding_line','assets/TomWinandySFX_UI_ScifiTech_Scroll-Loop_14.wav');
 
     this.load.audio('rift_close', 'assets/Magic Element 22_2.wav');
   }
