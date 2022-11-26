@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 
 import GameWorldScene from './GameWorldScene';
 import LoadSaveScene from './LoadSaveScene';
+import PreloaderScene from './PreloaderScene';
 
 const config = {
 	type: Phaser.AUTO,
@@ -15,7 +16,7 @@ const config = {
 			gravity: { y: 675 },
 		},
 	},
-	scene: [GameWorldScene, LoadSaveScene],
+	scene: [PreloaderScene, GameWorldScene, LoadSaveScene],
 }
 
 export default new Phaser.Game(config);

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import characterConfig from './characterConfig';
 import Character, { AIRBORN_IDLE_ANIM_MAX_SPEED, CHARACTER_MODE, JUMP_DELAY, PREMATURE_JUMP_ALLOWANCE } from './Character';
 import Level from './Level';
-import { pickupLocations, worldMapImports } from './worldMapConfig';
+import { pickupLocations } from './worldMapConfig';
 import saveManager from './saveManager';
 import LoadSaveScene from './LoadSaveScene';
 
@@ -46,44 +46,7 @@ export default class GameWorldScene extends Phaser.Scene {
 	}
 
   preload() {
-    this.loadAudioAssets();
-    this.loadMapAssets();
-    this.loadCharacterAssets();
-  }
-
-  loadAudioAssets() {
-    this.load.audio('desert','assets/Desert.wav');
-    this.load.audio('mountain','assets/Ambience_Wind_Mountain_01_Loop.wav');
-
-    // lump this into character assets & character config? or separate all audio into its own module or class?
-    this.load.audio('player_jump','assets/knyttlike-jump1.wav');
-    this.load.audio('player_run','assets/knyttlike-running.wav');
-    this.load.audio('player_land','assets/knyttlike-land1.wav');
-    this.load.audio('player_climb','assets/knyttlike-climbing2.wav');
-    this.load.audio('player_grip','assets/knyttlike-grip.wav');
-
-    this.load.audio('rift_close', 'assets/Magic Element 22_2.wav');
-  }
-
-  loadMapAssets() {
-    this.load.image("tiles", "assets/tileset_extruded.png");
-    for (let key in worldMapImports) {
-      this.load.tilemapTiledJSON(key, "assets/" + worldMapImports[key]);
-    }
-  }
-
-  loadCharacterAssets() {
-    for (let key in characterConfig) {
-      let charSpriteSheet = characterConfig[key].spriteSheet;
-      this.load.spritesheet(
-        charSpriteSheet.key,
-        charSpriteSheet.path, 
-        {
-          frameWidth: charSpriteSheet.frameSize[0],
-          frameHeight: charSpriteSheet.frameSize[1]
-        }
-      );
-    }
+    // nothing to do here -- the preloader handled it all
   }
 
   create() {
@@ -211,7 +174,7 @@ export default class GameWorldScene extends Phaser.Scene {
         {
           targets: this.screenFlash,
           fillAlpha: {
-            value: 0.65,
+            value: 0.60,
             duration: 35,
             ease: 'Power1'
           }
@@ -219,7 +182,7 @@ export default class GameWorldScene extends Phaser.Scene {
         {
           targets: this.screenFlash,
           fillAlpha: {
-            value: 0.22,
+            value: 0.20,
             duration: 200,
             ease: 'Power1'
           }
