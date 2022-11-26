@@ -43,7 +43,7 @@ export default class LoadSaveScene extends Phaser.Scene {
     let slots = saveManager.getSlots();
     let bg = this.add.rectangle(0,0, SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND_COLOR).setOrigin(0,0).setDepth(0);
     let padding = 12;
-    let layoutLeft = Math.floor((SCREEN_WIDTH - (slots.length * (LOAD_BUTTON_WIDTH + padding))) * 0.5);
+    let layoutLeft = Math.floor((SCREEN_WIDTH - (slots.length * (LOAD_BUTTON_WIDTH + padding)) + padding) * 0.5);
     let layoutTop = Math.floor((SCREEN_HEIGHT - LOAD_BUTTON_HEIGHT) * 0.5);
 
     let buttonOffsetIncrement = LOAD_BUTTON_WIDTH + padding;
