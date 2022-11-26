@@ -71,7 +71,7 @@ export default class GameWorldScene extends Phaser.Scene {
       'player_climb' : this.sound.add('player_climb', {volume: 0.4, loop: true}),
       'player_grip' : this.sound.add('player_grip', {volume: 0.4}),
       'rift_close' : this.sound.add('rift_close', {volume: 1}),
-      'guiding_line' : this.sound.add('guiding_line', {volume: 0.07, loop: true}),
+      'guiding_line' : this.sound.add('guiding_line', {volume: 0.05, loop: true}),
     };
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -600,6 +600,10 @@ export default class GameWorldScene extends Phaser.Scene {
     this.guideLinesActivated = false;
     this.setSFXLoop('guiding_line', false);
   }
+  
+  getJitter(scale = 1) {
+    return scale * (Math.random() - 0.5);
+  }
 
   updateGuideLines() {
     let startX = this.player.gameObject.body.center.x;
@@ -612,8 +616,9 @@ export default class GameWorldScene extends Phaser.Scene {
       let locationY = (locationInfo.worldY * LEVEL_HEIGHT) - globalOffsetY + locationInfo.levelY;
       let length = Math.sqrt((locationX - startX) * (locationX - startX) + (locationY - startY) * (locationY - startY));
       let line = this.guideLines[index];
-      line.setTo(startX, startY, locationX, locationY);
-      line.setAlpha(Math.min(Math.max(1000/length, 0.05), 0.9));
+      let flickerAmount = this.getJitter(0.125);
+      line.setTo(startX + this.getJitter(1), startY + this.getJitter(1), locationX + this.getJitter(1), locationY + this.getJitter(1));
+      line.setAlpha(Math.min(Math.max(1000/length + flickerAmount, 0.05), 0.9));
 
       if (saveManager.didPickUp(locationInfo.id) === true) {
         this.guideLines[index].setVisible(false);
