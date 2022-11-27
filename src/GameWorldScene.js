@@ -31,7 +31,7 @@ export default class GameWorldScene extends Phaser.Scene {
     this.sfx = {};
     this.gameOver = false;
     this.running = false;
-    this.paused = false;
+    this.inCutscene = false;
     /** @type Phaser.GameObjects.Rectangle */
     this.screenFlash = null;
     /** @type Phaser.GameObjects.Rectangle */
@@ -71,6 +71,8 @@ export default class GameWorldScene extends Phaser.Scene {
       'player_climb' : this.sound.add('player_climb', {volume: 0.4, loop: true}),
       'player_grip' : this.sound.add('player_grip', {volume: 0.4}),
       'rift_close' : this.sound.add('rift_close', {volume: 1}),
+      'rescue_player_start' : this.sound.add('rescue_player_start', {volume: 0.45}),
+      'rescue_player_end' : this.sound.add('rescue_player_end', {volume: 0.3}),
       'guiding_line' : this.sound.add('guiding_line', {volume: 0.05, loop: true}),
     };
 
@@ -175,7 +177,7 @@ export default class GameWorldScene extends Phaser.Scene {
         {
           targets: this.screenFlash,
           fillAlpha: {
-            value: 0.60,
+            value: 0.55,
             duration: 35,
             ease: 'Power1'
           }
@@ -254,6 +256,7 @@ export default class GameWorldScene extends Phaser.Scene {
     
     this.level = new Level(this, mapKey, this.player);
     this.level.onCollect = this.onCollectPickup.bind(this);
+    this.level.onCollide = this.onTouchTile.bind(this);
     this.level.handleEnter();
 
     if (newPlayerX != null) {
@@ -284,7 +287,7 @@ export default class GameWorldScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.running && !this.paused) {
+    if (this.running && !this.inCutscene) {
       let playerObj = this.player.gameObject;
       this.handlePlayerMovement(time, delta);
 
@@ -636,6 +639,55 @@ export default class GameWorldScene extends Phaser.Scene {
       // later, we will win more elegantly, I hope
       this.winGame();
     }
+  }
+
+  onTouchTile(tile, player) {
+    if (this.inCutscene) {
+      return;
+    }
+    if (tile && tile.properties && tile.properties.deadly === true) {
+      this.rescuePlayerFromDeath();
+    }
+  }
+
+  rescuePlayerFromDeath() {
+    let savedState = saveManager.getState();
+    let safeWorldX = savedState.worldX;
+    let safeWorldY = savedState.worldY;
+    let safeLevelX = savedState.safeX;
+    let safeLevelY = savedState.safeY;
+
+    
+    this.sfx['rescue_player_start'].play();
+    this.player.gameObject.body.setEnable(false).setVelocity(0,0).setAcceleration(0,0);
+    this.player.gameObject.setTintFill(0xFFFFFF);
+    this.player.gameObject.anims.pause();
+    
+    this.setSFXLoop('player_run', false);
+    this.setSFXLoop('player_climb', false);
+    this.hideGuideLines();
+
+    this.inCutscene = true;
+    // this.scene.pause('GameWorldScene');
+
+    setTimeout(()=>{
+      if (safeWorldX !== this.worldX || safeWorldY !== this.worldY) {
+        this.enterWorldPosition(safeWorldX, safeWorldY, safeLevelX, safeLevelY - 1);
+        this.player.setMode(CHARACTER_MODE.AIRBORN);
+      } else {
+        this.player.gameObject.setPosition(safeLevelX, safeLevelY - 1);
+        this.player.setMode(CHARACTER_MODE.AIRBORN);
+      }
+      this.sfx['rescue_player_end'].play();
+      this.player.gameObject.clearTint();
+      setTimeout(()=>{
+        this.player.gameObject.body.setEnable(true)
+        this.player.gameObject.active = true;
+        this.player.gameObject.anims.resume();
+        this.inCutscene = false;
+        // this.scene.resume('GameWorldScene');
+      }, 50);
+    }, 700);
   }
 
   winGame() {

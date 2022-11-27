@@ -30,11 +30,14 @@ export default class Level {
     this.pickups = [];
     this.overlapCheckers = [];
     this.groundCollider = null;
-    this.onCollect = function(item, player) {console.log('collected', item);}
+    this.onCollect = function(item, playerObj) {console.log('collected', item);};
+    this.onCollide = function (tile, playerObj) {};
 
 
     this.groundLayer.setCollisionByProperty({ solid: true });
-    this.groundCollider = scene.physics.add.collider(player.gameObject, this.groundLayer);
+    this.groundCollider = scene.physics.add.collider(player.gameObject, this.groundLayer, (player, tile) => {
+      this.onCollide(tile, player);
+    });
 
     const spawnLayer = map.getObjectLayer("Spawns");
     if (spawnLayer) {
@@ -74,6 +77,8 @@ export default class Level {
     this.groundCollider.destroy();
     this.pickups.forEach((pickup)=>{pickup.destroy()});
     this.map.destroy();
+    this.onCollect = null;
+    this.onCollide = null;
   }
 
   onTouchPickup(player, pickup) {
