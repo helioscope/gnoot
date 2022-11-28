@@ -103,12 +103,21 @@ export const worldMapImports = {
   "world-58,52": "world_x58_y52.tmj",
   "world-59,49": "world_x59_y49.tmj",
   "world-59,50": "world_x59_y50.tmj",
+  "world-59,51": "world_x59_y51.tmj",
+  "world-59,52": "world_x59_y52.tmj",
   "world-60,49": "world_x60_y49.tmj",
   "world-60,50": "world_x60_y50.tmj",
+  "world-60,51": "world_x60_y51.tmj",
+  "world-60,52": "world_x60_y52.tmj",
   "world-61,49": "world_x61_y49.tmj",
   "world-61,50": "world_x61_y50.tmj",
+  "world-61,51": "world_x61_y51.tmj",
   "world-61,52": "world_x61_y52.tmj",
-  "world-62,50": "world_x62_y50.tmj"
+  "world-62,50": "world_x62_y50.tmj",
+  "world-62,51": "world_x62_y51.tmj",
+  "world-62,52": "world_x62_y52.tmj",
+  "world-63,51": "world_x63_y51.tmj",
+  "world-63,52": "world_x63_y52.tmj"
 };
 export const pickupLocations = [
   {
@@ -150,8 +159,8 @@ export const pickupLocations = [
     "id": "mushy",
     "worldX": 54,
     "worldY": 51,
-    "levelX": 414,
-    "levelY": 255
+    "levelX": 216,
+    "levelY": 138
   },
   {
     "id": "precarious",

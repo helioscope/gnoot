@@ -62,6 +62,11 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.audio('desert','assets/Desert.wav');
     this.load.audio('mountain','assets/Ambience_Wind_Mountain_01_Loop.wav');
 
+    this.load.audio('pillars','assets/Wind Loop 1.wav');
+    this.load.audio('bridge', 'assets/Ambience_Place_Bridge_Wooden_Crackling_Loop.wav');
+    this.load.audio('plateau-soft', 'assets/Ambience_Wind_Intensity_Soft_With_Leaves_Loop.wav');
+    this.load.audio('plateau-windy', 'assets/Ambience_Place_Desert_Night_Loop.wav');
+
     // lump this into character assets & character config? or separate all audio into its own module or class?
     this.load.audio('player_jump','assets/knyttlike-jump1.wav');
     this.load.audio('player_run','assets/knyttlike-running.wav');
