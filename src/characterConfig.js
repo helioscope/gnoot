@@ -2,8 +2,8 @@ export default {
   player : {
     stats : {
       walkSpeed : 120,
-      jumpSpeed : 110,
-      jumpLift : 560,
+      jumpSpeed : 115,
+      jumpLift : 565,
       jumpLiftTime : 1000,
       landingTime : 100,
       climbSpeed : 71,
@@ -13,30 +13,30 @@ export default {
     },
     spriteSheet : {
       key : "player-sprite",
-      path : "assets/player-placeholder-anims.png",
+      path : "assets/player-placeholder-anims2.png",
       frameSize : [16, 16],
       colliderSize : [10, 15],
       colliderOffset : [3, 1]
     },
     animationSettings : {
       animationPrefix : "player__",
-      defaultFramerate : 10,
+      defaultFramerate : 11,
     },
     animations : {
       idle : {
         frames: [0]
       },
       walk : {
-        frames: [1,2]
+        frames: [1,2,3,4]
       },
       jumpRise : {
-        frames: [3,4]
-      },
-      jumpPeak : {
         frames: [5]
       },
+      jumpPeak : {
+        frames: [6]
+      },
       jumpFall : {
-        frames: [6,7]
+        frames: [7]
       },
       jumpLand : {
         frames: [8]
