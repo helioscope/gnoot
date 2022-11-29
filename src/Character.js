@@ -121,7 +121,7 @@ export default class Character {
     }
 
     if (this.mode === CHARACTER_MODE.AIRBORN) {
-      if (this.lastExitedMode === CHARACTER_MODE.GROUNDED) {
+      if (this.lastExitedMode === CHARACTER_MODE.GROUNDED || this.lastExitedMode === CHARACTER_MODE.EDGE_CLIMBING) {
         if (time - this.lastModeChangeTime < COYOTE_TIME) {
           return true;
         }

@@ -375,9 +375,10 @@ export default class GameWorldScene extends Phaser.Scene {
       if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
         if (!player.canGrip(this.level.groundLayer)) {
           if (playerBody.velocity.y < 0) {
+            playerBody.position.y -= 1; // a tiny bit of help clambering up
             player.jump(time);
           } else {
-            player.setMode(CHARACTER_MODE.AIRBORN);
+            player.setMode(CHARACTER_MODE.AIRBORN, time);
           }
         }
       } else {
@@ -453,30 +454,46 @@ export default class GameWorldScene extends Phaser.Scene {
       if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
         // when walking up to a wall, you can latch on without wanting to.
         // disengage if you try to walk in the opposite direction
-        if (player.isFacingRight() && player.canStand(this.level.groundLayer)) {
-          player.setMode(CHARACTER_MODE.GROUNDED);
+        if (player.isFacingRight()) {
+          if (player.canStand(this.level.groundLayer)) {
+            player.setMode(CHARACTER_MODE.GROUNDED, time);
+          } else {
+            if (input.y < 0) {
+              player.jump(time);
+            } else {
+              player.setMode(CHARACTER_MODE.AIRBORN, time);
+            }
+          }
         }
       }
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = true;
         playerBody.setVelocityX(-player.stats.walkSpeed);
         if (player.canGrip(this.level.groundLayer)) {
-          player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+          player.setMode(CHARACTER_MODE.EDGE_CLIMBING, time);
         }
       }
     } else if (input.x > 0) {
       if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
         // when walking up to a wall, you can latch on without wanting to.
         // disengage if you try to walk in the opposite direction
-        if (player.isFacingLeft() && player.canStand(this.level.groundLayer)) {
-          player.setMode(CHARACTER_MODE.GROUNDED);
+        if (player.isFacingLeft()) {
+          if (player.canStand(this.level.groundLayer)) {
+            player.setMode(CHARACTER_MODE.GROUNDED, time);
+          } else {
+            if (input.y < 0) {
+              player.jump(time);
+            } else {
+              player.setMode(CHARACTER_MODE.AIRBORN, time);
+            }
+          }
         }
       }
       if (player.mode !== CHARACTER_MODE.EDGE_CLIMBING) {
         playerGameObject.flipX = false;
         playerBody.setVelocityX(player.stats.walkSpeed);
         if (player.canGrip(this.level.groundLayer)) {
-          player.setMode(CHARACTER_MODE.EDGE_CLIMBING);
+          player.setMode(CHARACTER_MODE.EDGE_CLIMBING, time);
         }
       }
     } else {
@@ -485,7 +502,7 @@ export default class GameWorldScene extends Phaser.Scene {
 
     if (player.mode === CHARACTER_MODE.EDGE_CLIMBING) {
       if (input.y > 0 && playerBody.onFloor()) {
-        player.setMode(CHARACTER_MODE.GROUNDED);
+        player.setMode(CHARACTER_MODE.GROUNDED, time);
         playerBody.setAccelerationY(0);
       } else {
         playerBody.setVelocityY(player.stats.climbSpeed * input.y);
@@ -673,11 +690,10 @@ export default class GameWorldScene extends Phaser.Scene {
     setTimeout(()=>{
       if (safeWorldX !== this.worldX || safeWorldY !== this.worldY) {
         this.enterWorldPosition(safeWorldX, safeWorldY, safeLevelX, safeLevelY - 1);
-        this.player.setMode(CHARACTER_MODE.AIRBORN);
       } else {
         this.player.gameObject.setPosition(safeLevelX, safeLevelY - 1);
-        this.player.setMode(CHARACTER_MODE.AIRBORN);
       }
+      this.player.setMode(CHARACTER_MODE.AIRBORN, this.game.getTime());
       this.sfx['rescue_player_end'].play();
       this.player.gameObject.clearTint();
       setTimeout(()=>{
