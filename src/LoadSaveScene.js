@@ -37,6 +37,7 @@ export default class LoadSaveScene extends Phaser.Scene {
     /** @type Phaser.GameObjects.Text[] */
     this.slotDescriptions = [];
     this.onTriggerLoad = (loadIndex) => {console.warn('no load handler provided')};
+    this.buttonSound = null;
   }
 
   create() {
@@ -45,6 +46,10 @@ export default class LoadSaveScene extends Phaser.Scene {
     let padding = 12;
     let layoutLeft = Math.floor((SCREEN_WIDTH - (slots.length * (LOAD_BUTTON_WIDTH + padding)) + padding) * 0.5);
     let layoutTop = Math.floor((SCREEN_HEIGHT - LOAD_BUTTON_HEIGHT) * 0.5);
+    // let title = this.add.text(0,40, "gnoot", {...LABEL_HEADER_STYLING, fontSize: '12px', fixedWidth: SCREEN_WIDTH});
+    let help = this.add.text(0,100, "pick a save slot:", {...LABEL_HEADER_STYLING, fontSize: '9px', fixedWidth: SCREEN_WIDTH});
+
+    // title.setAlpha(0.25);
 
     let buttonOffsetIncrement = LOAD_BUTTON_WIDTH + padding;
     slots.forEach((slotData, index) => {
@@ -53,6 +58,8 @@ export default class LoadSaveScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0,0, 480,320);
     this.cameras.main.setZoom(2, 2);
+
+    this.buttonSound = this.sound.add('loader-button-press', {volume: 0.3});
   }
 
   generateSlotText(slotData) {
@@ -115,13 +122,13 @@ export default class LoadSaveScene extends Phaser.Scene {
       // could do "down" state styling here)
       this.activeButton = buttonRect;
       this.input.once('pointerup', () => {
-        console.log('scene pointerup event');
         this.resetActiveButton();
       });
     })
 
     buttonRect.on('pointerup', () => {
       if (this.activeButton == buttonRect) {
+        this.buttonSound.play();
         callback(callbackData);
       }
     });
@@ -136,7 +143,10 @@ export default class LoadSaveScene extends Phaser.Scene {
 
   onPressLoadButton(slotIndex) {
     if (saveManager.getSlots()[slotIndex].finished !== true) {
-      this.onTriggerLoad(slotIndex);
+      this.exit();
+      setTimeout(()=>{
+        this.onTriggerLoad(slotIndex);
+      }, 500)
     }
   }
 

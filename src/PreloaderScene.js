@@ -9,7 +9,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.progressGraphics = null;
     this.loadFinished = false;
     this.allDone = false;
-    this.onComplete = ()=>{console.warn("no oncomplete handler has been provided for the preloader!")}
+    this.onComplete = ()=>{return;console.warn("no oncomplete handler has been provided for the preloader!")}
   }
 
   preload() {
@@ -31,11 +31,11 @@ export default class PreloaderScene extends Phaser.Scene {
     this.progressGraphics.clear();
     this.progressGraphics.fillStyle(0xffffff, 1);
     this.progressGraphics.fillRect(0, 270,  this.game.canvas.width * progressValue, 60);
-    console.log(this.game.canvas.width * progressValue);
+    // console.log(this.game.canvas.width * progressValue);
   }
 
   endLoadProgressVisuals() {
-    console.log('load finished');
+    // console.log('load finished');
     this.loadFinished = true;
   }
 
@@ -93,6 +93,8 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.audio('guiding_line','assets/TomWinandySFX_UI_ScifiTech_Scroll-Loop_14.wav');
 
     this.load.audio('rift_close', 'assets/Magic Element 22_2.wav');
+
+    this.load.audio('loader-button-press', 'assets/Click (13).wav');
   }
 
   create() {
