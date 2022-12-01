@@ -245,12 +245,12 @@ export default class GameWorldScene extends Phaser.Scene {
   enterWorldPosition(worldX, worldY, playerX, playerY) {
     this.worldX = worldX;
     this.worldY = worldY;
-    console.log(`entering world position: ${worldX}, ${worldY})`);
+    // console.log(`entering world position: ${worldX}, ${worldY})`);
     this.enterMap(this.getMapKeyForWorldPosition(worldX, worldY), playerX, playerY);
   }
 
   enterMap(mapKey, newPlayerX, newPlayerY) {
-    console.log(`entering map: "${mapKey}" (new player position: ${newPlayerX}, ${newPlayerY})`);
+    // console.log(`entering map: "${mapKey}" (new player position: ${newPlayerX}, ${newPlayerY})`);
     if (this.level) {
       this.level.handleExit();
       this.level.destroy();
@@ -270,7 +270,7 @@ export default class GameWorldScene extends Phaser.Scene {
   }
 
   setAmbience(newAmbience) {
-    console.log('new ambience', newAmbience);
+    // console.log('new ambience', newAmbience);
     for (let key in this.ambience) {
       if (key in newAmbience) {
         this.ambience[key].volume = newAmbience[key];
@@ -341,6 +341,7 @@ export default class GameWorldScene extends Phaser.Scene {
     if (this.running && !this.inCutscene) {
       let playerObj = this.player.gameObject;
       this.handlePlayerMovement(time, delta);
+      this.level.update(time, delta);
 
       if (this.player.mode === CHARACTER_MODE.GROUNDED) {
         saveManager.setSavedPosition(this.worldX, this.worldY, playerObj.x, playerObj.y, this.player.getFacing());
@@ -702,7 +703,7 @@ export default class GameWorldScene extends Phaser.Scene {
     this.flashScreen();
     
     let remainingPickups = pickupLocations.filter((pickupInfo) => !saveManager.didPickUp(pickupInfo.id));
-    console.log(remainingPickups);
+    // console.log(remainingPickups);
     if (remainingPickups.length === 0) {
       // later, we will win more elegantly, I hope
       this.winGame();

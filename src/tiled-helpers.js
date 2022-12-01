@@ -11,6 +11,6 @@ export function getObjectCustomProperty(obj, propertyName) {
 }
 
 /** @param {Number} id @param {Phaser.Tilemaps.ObjectLayer} objectLayer  */
-export function findReferencedObject(id, objectLayer) {
+export function getReferencedObject(id, objectLayer) {
   return (objectLayer.objects.find((obj) => obj.id == id));
 }

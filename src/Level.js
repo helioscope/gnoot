@@ -1,6 +1,6 @@
 import Character from "./Character";
 import characterConfig from "./characterConfig";
-import { getNewBehaviorState } from "./npcDriver";
+import { driveNPC, getNewBehaviorState } from "./npcDriver";
 import saveManager from "./saveManager";
 import { getObjectCustomProperty } from "./tiled-helpers";
 
@@ -122,12 +122,16 @@ export default class Level {
     }
 
     const newCharacter = new Character(scene, data.x, data.y, config);
-    newCharacter.behaviorState = getNewBehaviorState(behaviorId, data, this.map);
+    newCharacter.behaviorState = getNewBehaviorState(newCharacter, behaviorId, data, this.map);
     this.npcs.push(newCharacter);
     this.collisionCheckers.push(scene.physics.add.collider(newCharacter.gameObject, this.groundLayer));
   }
 
-  
+  update(time, deltaTime) {
+    this.npcs.forEach((npc) => {
+      driveNPC(npc, this, time, deltaTime);
+    });
+  }
 
   destroy() {
     this.overlapCheckers.forEach((checker)=>{checker.destroy()});

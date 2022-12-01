@@ -104,7 +104,11 @@ export default {
   },
   tinyturtle : {
     stats : {
-      moveSpeed : 8,
+      moveSpeed : 3
+    },
+    behavior : {
+      idleRange: [1000, 4000],
+      moveRange: [2000, 7000]
     },
     spriteSheet : {
       key : "tinyturtle",
@@ -128,7 +132,11 @@ export default {
   },
   lumpie : {
     stats : {
-      moveSpeed : 25,
+      moveSpeed : 12,
+    },
+    behavior : {
+      idleRange: [1000, 3000],
+      moveRange: [1200, 4000]
     },
     spriteSheet : {
       key : "lumpie",
