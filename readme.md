@@ -1,10 +1,13 @@
 # About
 
-Hello. 
+For the github GameOff 2022 I tried making a knytt homage of sorts.
 
-For the github GameOff 2022 I wanted to try making a knytt homage of sorts. We'll see if it works out.
+It's built using Phaser 3, with tilemap level made with Tiled.
 
-It's built using Phaser 3, starting from a template repo.
+This is my first time using Phaser 3, so (on top of being jam-quality) the code is a definitely rough in spots.
+
+
+**Please note that no assets are currently included.** This means you will not be able to build & run this repo as-is. I'm working on figuring out how to provide sample assets, but this may take a little while to work out. As-is, the PreloaderScene will try to load a bunch of paths that won't exist and very soon something (probably audio) will not be okay with this.
 
 
 # Readme stuff from Phaser 3 + Vite.js template:
@@ -114,11 +117,15 @@ You can change the dev server's port number by modifying the `vite.config.js` fi
 Change 8000 to whatever you want.
 
 
+
 # Libraries, tools, etc.
 
 ## Phaser 3
 
-TODO
+Mature & pretty robust game framework targeting web. It's been surprisingly
+
+site: [https://phaser.io/]
+repo: [https://github.com/photonstorm/phaser]
 
 
 ## Phaser 3 + Vite.js Template
@@ -141,7 +148,8 @@ license: unspecified
 
 ## Tiled map editor
 
-TODO: provide link
+site: [https://www.mapeditor.org/]
+repo: [https://github.com/mapeditor/tiled]
 
 Not included in this repo. This is the tool used to create the tilemaps used by the game. Some extra scripts are included in the `tiled-extensions` directory for use with Tiled to speed up development.
 
