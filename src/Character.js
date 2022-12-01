@@ -25,6 +25,7 @@ export default class Character {
     
     this.config = config;
     this.stats = {...config.stats};
+    this.behaviorState = {};
     /** @type Phaser.Types.Physics.Arcade.SpriteWithDynamicBody */
     this.gameObject = scene.physics.add.sprite(x,y, spriteConfig.key)
       .setSize(spriteConfig.colliderSize[0],spriteConfig.colliderSize[1])
@@ -153,5 +154,9 @@ export default class Character {
     this.lastExitedMode = this.mode;
     this.mode = newMode;
     this.lastModeChangeTime = time;
+  }
+
+  destroy() {
+    this.gameObject.destroy();
   }
 }

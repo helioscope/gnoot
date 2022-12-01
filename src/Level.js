@@ -1,5 +1,8 @@
+import Character from "./Character";
 import characterConfig from "./characterConfig";
+import { getNewBehaviorState } from "./npcDriver";
 import saveManager from "./saveManager";
+import { getObjectCustomProperty } from "./tiled-helpers";
 
 export const TILESET_ASSET_KEY = "tiles"; // key for the tileset image we loaded
 export const TILED_TILESET_NAME = "main-tileset"; // name of the tileset in Tiled
@@ -29,16 +32,17 @@ export default class Level {
     this.groundLayer = map.createLayer(TILED_LAYER_NAMES.GROUND, tileset, 0, 0);
     this.pickups = [];
     this.sprites = [];
+    this.npcs = [];
     this.overlapCheckers = [];
-    this.groundCollider = null;
+    this.collisionCheckers = [];
     this.onCollect = function(item, playerObj) {console.log('collected', item);};
     this.onCollide = function (tile, playerObj) {};
 
 
     this.groundLayer.setCollisionByProperty({ solid: true });
-    this.groundCollider = scene.physics.add.collider(player.gameObject, this.groundLayer, (player, tile) => {
+    this.collisionCheckers.push(scene.physics.add.collider(player.gameObject, this.groundLayer, (player, tile) => {
       this.onCollide(tile, player);
-    });
+    }));
 
     const spawnLayer = map.getObjectLayer("Spawns");
     if (spawnLayer) {
@@ -62,7 +66,6 @@ export default class Level {
             .setSize(spriteConfig.colliderSize[0],spriteConfig.colliderSize[1])
             .setOffset(spriteConfig.colliderOffset[0],spriteConfig.colliderOffset[1]);
           pickup.setData("pickupId", pickupId);
-          console.log(obj, pickupId);
           pickup.anims.play(pickupConfig.animationSettings.animationPrefix + "idle", true);
           pickup.body.allowGravity = false;
 
@@ -70,6 +73,8 @@ export default class Level {
           this.overlapCheckers.push(scene.physics.add.overlap(player.gameObject, pickup, this.onTouchPickup, null, this));
         } else if (obj.name === "Sprite") {
           this.spawnSprite(obj, scene);
+        } else if (obj.name === "NPC") {
+          this.spawnNPC(obj, scene);
         }
       });
     }
@@ -80,10 +85,10 @@ export default class Level {
    * @param {Phaser.Scene} scene
    * */
   spawnSprite(data, scene) {
-    const spriteConfigId = this.getObjectCustomProperty(data, 'id');
-    const defaultAnim = this.getObjectCustomProperty(data, 'defaultAnimation');
-    const tint = this.getObjectCustomProperty(data, 'tint');
-    const flipX = this.getObjectCustomProperty(data, 'flipX');
+    const spriteConfigId = getObjectCustomProperty(data, 'id');
+    const defaultAnim = getObjectCustomProperty(data, 'defaultAnimation');
+    const tint = getObjectCustomProperty(data, 'tint');
+    const flipX = getObjectCustomProperty(data, 'flipX');
     const config = characterConfig[spriteConfigId];
 
     if (config == null) {
@@ -102,23 +107,34 @@ export default class Level {
     this.sprites.push(newSprite);
   }
 
-  /** @param {Phaser.Types.Tilemaps.TiledObject} obj @param {String} propertyName */
-  getObjectCustomProperty(obj, propertyName) {
-    if (!Array.isArray(obj.properties)) {
-      console.warn("tiled object appears to be missing custom properties -- this may break things", obj.name);
+  /** 
+   * @param {Phaser.Types.Tilemaps.TiledObject} data 
+   * @param {Phaser.Scene} scene
+   * */
+   spawnNPC(data, scene) {
+    const configId = getObjectCustomProperty(data, 'characterId');
+    const behaviorId = getObjectCustomProperty(data, 'behavior');
+    const config = characterConfig[configId];
+
+    if (config == null) {
+      console.warn(`bad id "${configId}" for sprite in level`);
+      return;
     }
-    let propertyEntry = obj.properties.find((prop)=>prop.name === propertyName);
-    if (propertyEntry) {
-      return propertyEntry.value;
-    }
-    return null;
+
+    const newCharacter = new Character(scene, data.x, data.y, config);
+    newCharacter.behaviorState = getNewBehaviorState(behaviorId, data, this.map);
+    this.npcs.push(newCharacter);
+    this.collisionCheckers.push(scene.physics.add.collider(newCharacter.gameObject, this.groundLayer));
   }
+
+  
 
   destroy() {
     this.overlapCheckers.forEach((checker)=>{checker.destroy()});
-    this.groundCollider.destroy();
+    this.collisionCheckers.forEach((checker) => {checker.destroy()});
     this.pickups.forEach((pickup)=>{pickup.destroy()});
     this.sprites.forEach((sprite)=>{sprite.destroy()});
+    this.npcs.forEach((character)=>{character.destroy()});
     this.map.destroy();
     this.onCollect = null;
     this.onCollide = null;
