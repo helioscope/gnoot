@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import characterConfig from './characterConfig';
+import particlesConfig from './particlesConfig';
 import { worldMapImports } from './worldMapConfig';
 
 export default class PreloaderScene extends Phaser.Scene {
@@ -19,6 +20,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.loadAudioAssets();
     this.loadMapAssets();
     this.loadCharacterAssets();
+    this.loadParticleAssets();
   }
 
   addLoadProgressVisuals() {
@@ -58,6 +60,16 @@ export default class PreloaderScene extends Phaser.Scene {
     }
   }
 
+  loadParticleAssets() {
+    for (let key in particlesConfig) {
+      let config = particlesConfig[key];
+      this.load.image(
+        config.spriteId,
+        config.filepath
+      );
+    }
+  }
+
   loadAudioAssets() {
     this.load.audio('desert','assets/Desert.wav');
     this.load.audio('mountain','assets/Ambience_Wind_Mountain_01_Loop.wav');
@@ -68,6 +80,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.audio('cave-large', 'assets/Cave 2.wav');
     this.load.audio('cave-dark', 'assets/Ambience_Place_Cave_Dark_Loop.wav');
     this.load.audio('stalks', 'assets/Knytt-like-game-sfx--fungus-ambience1-loop.wav');
+    this.load.audio('disassembler', 'assets/Knytt-like-game-sfx--disassembler-hum-loop.wav');
 
     // lump this into character assets & character config? or separate all audio into its own module or class?
     this.load.audio('player_jump','assets/knyttlike-jump1.wav');

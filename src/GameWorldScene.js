@@ -5,6 +5,7 @@ import Level from './Level';
 import { pickupLocations } from './worldMapConfig';
 import saveManager from './saveManager';
 import LoadSaveScene from './LoadSaveScene';
+import particlesConfig from './particlesConfig';
 
 const LEVEL_WIDTH = 480;
 const LEVEL_HEIGHT = 320;
@@ -29,6 +30,7 @@ export default class GameWorldScene extends Phaser.Scene {
     this.showDebug = false;
     this.ambience = {};
     this.sfx = {};
+    this.particlesMix = {};
     this.gameOver = false;
     this.running = false;
     this.inCutscene = false;
@@ -264,6 +266,7 @@ export default class GameWorldScene extends Phaser.Scene {
     }
     
     this.setAmbience(this.level.getAmbience());
+    this.setParticleSystems(this.level.getParticleSettings());
   }
 
   setAmbience(newAmbience) {
@@ -284,6 +287,54 @@ export default class GameWorldScene extends Phaser.Scene {
         this.ambience[key].play();
       }
     }
+  }
+
+  setParticleSystems(newParticlesMix) {
+    for (let key in this.particlesMix) {
+      let emitter = this.particlesMix[key];
+      emitter.killAll();
+      if (key in newParticlesMix) {
+        // do nothing -- we will prewarm in next pass
+      } else {
+        emitter.stop();
+      }
+    }
+
+    for (let key in newParticlesMix) {
+      let emitter = this.particlesMix[key];
+      let volume = newParticlesMix[key];
+      if (emitter == null) {
+        emitter = this.createParticleSystem(key);
+        this.particlesMix[key] = emitter;
+      }
+      this.prewarmParticles(emitter, key, volume);
+      emitter.start();
+    }
+  }
+
+  createParticleSystem(key) {
+    const config = particlesConfig[key];
+    if (config == null) {
+      console.warn('key not found in particles config', key);
+      return;
+    }
+    const manager = this.add.particles(config.spriteId);
+    let emitter = manager.createEmitter(config.emitterConfig);
+    manager.depth = config.depth;
+    return emitter;
+  }
+
+  prewarmParticles(emitter, key, volume) {
+    const config = particlesConfig[key];
+    if (config == null) {
+      console.warn('key not found in particles config', key);
+      return;
+    }
+    const prewarmSpawnZone = config.prewarm.emitZone;
+    const updateSpawnZone = config.emitterConfig.emitZone;
+
+    emitter.setEmitZone(prewarmSpawnZone).emitParticle(Math.floor(config.prewarm.count * volume));
+    emitter.setEmitZone(updateSpawnZone).setQuantity(config.emitterConfig.quantity * volume);
   }
 
   update(time, delta) {

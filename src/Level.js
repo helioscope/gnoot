@@ -28,6 +28,7 @@ export default class Level {
     /** @type Phaser.Tilemaps.TilemapLayer */
     this.groundLayer = map.createLayer(TILED_LAYER_NAMES.GROUND, tileset, 0, 0);
     this.pickups = [];
+    this.sprites = [];
     this.overlapCheckers = [];
     this.groundCollider = null;
     this.onCollect = function(item, playerObj) {console.log('collected', item);};
@@ -67,15 +68,57 @@ export default class Level {
 
           this.pickups.push(pickup);
           this.overlapCheckers.push(scene.physics.add.overlap(player.gameObject, pickup, this.onTouchPickup, null, this));
+        } else if (obj.name === "Sprite") {
+          this.spawnSprite(obj, scene);
         }
       });
     }
+  }
+
+  /** 
+   * @param {Phaser.Types.Tilemaps.TiledObject} data 
+   * @param {Phaser.Scene} scene
+   * */
+  spawnSprite(data, scene) {
+    const spriteConfigId = this.getObjectCustomProperty(data, 'id');
+    const defaultAnim = this.getObjectCustomProperty(data, 'defaultAnimation');
+    const tint = this.getObjectCustomProperty(data, 'tint');
+    const flipX = this.getObjectCustomProperty(data, 'flipX');
+    const config = characterConfig[spriteConfigId];
+
+    if (config == null) {
+      console.warn(`bad id "${spriteConfigId}" for sprite in level`);
+      return;
+    }
+
+    const newSprite = scene.add.sprite(data.x, data.y, config.spriteSheet.key);
+    if (flipX) {
+      newSprite.flipX = true;
+    }
+    if (tint) {
+      newSprite.tint = parseInt(tint.replace('#',''),16);
+    }
+    newSprite.anims.play(config.animationSettings.animationPrefix + defaultAnim, true);
+    this.sprites.push(newSprite);
+  }
+
+  /** @param {Phaser.Types.Tilemaps.TiledObject} obj @param {String} propertyName */
+  getObjectCustomProperty(obj, propertyName) {
+    if (!Array.isArray(obj.properties)) {
+      console.warn("tiled object appears to be missing custom properties -- this may break things", obj.name);
+    }
+    let propertyEntry = obj.properties.find((prop)=>prop.name === propertyName);
+    if (propertyEntry) {
+      return propertyEntry.value;
+    }
+    return null;
   }
 
   destroy() {
     this.overlapCheckers.forEach((checker)=>{checker.destroy()});
     this.groundCollider.destroy();
     this.pickups.forEach((pickup)=>{pickup.destroy()});
+    this.sprites.forEach((sprite)=>{sprite.destroy()});
     this.map.destroy();
     this.onCollect = null;
     this.onCollide = null;
@@ -88,29 +131,37 @@ export default class Level {
   }
 
   getAmbience() {
+    return this.getScaledSettings('audioloops');
+  }
+
+  getParticleSettings() {
+    return this.getScaledSettings('particles');
+  }
+
+  getScaledSettings(propertyName) {
     let mapProperties = this.map.properties;
-    let loopProp = Array.isArray(mapProperties) ? mapProperties.find((prop)=>{return prop.name === "audioloops";}) : null;
-    let loopString = loopProp ? loopProp.value : null;
+    let prop = Array.isArray(mapProperties) ? mapProperties.find((prop)=>{return prop.name === propertyName;}) : null;
+    let valString = prop ? prop.value : null;
     
-    let ambienceSettings = {};
-    if (loopString) {
-      loopString.split(/[,;]/).forEach((trackString) => {
-        let [key, volume] = trackString.split('@');
-        if (!(key && volume)) {
-          console.warn(`ambience track string is missing parts: ${trackString}`);
+    let settings = {};
+    if (valString) {
+      valString.split(/[,;]/).forEach((trackString) => {
+        let [key, percent] = trackString.split('@');
+        if (!(key && percent)) {
+          console.warn(`config string "${propertyName}" is missing parts: ${trackString}`);
           return;
         }
         key = key.trim();
-        volume = parseInt(volume.trim());
-        if (key.length === 0 || isNaN(volume)) {
-          console.warn(`ambience track string seems badly formatted: ${trackString}`);
+        percent = parseInt(percent.trim());
+        if (key.length === 0 || isNaN(percent)) {
+          console.warn(`config string "${propertyName}" seems badly formatted: ${trackString}`);
           return;
         } else {
-          ambienceSettings[key] = volume / 100;
+          settings[key] = percent / 100;
         }
       });
     }
-    return ambienceSettings;
+    return settings;
   }
 
   handleEnter() {
